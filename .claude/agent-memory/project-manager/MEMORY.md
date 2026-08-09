@@ -1,6 +1,6 @@
 # Memoire project-manager
 
-- Projet en phase de cadrage; aucun code produit n'existe encore.
+- PHASE-01 est complete: le depot contient un shell Tauri 2/React strict, un coeur Rust minimal, un IPC `health_check` type et une CI Windows/macOS/Linux.
 - Architecture cible: Tauri 2, React/TypeScript/Vite, core Rust, ASR local, Cloud facultatif.
 - Activer 3 a 5 leads par cycle; pas de boucle infinie.
 - Plan directeur: `docs/roadmap/README.md`; source d'etat: `docs/roadmap/STATUS.md`.
@@ -14,3 +14,7 @@
 - Validation d'union CYCLE-20260809-02: cinq branches sans conflit, 18/18 livrables, 29 fichiers uniques sans overlap, 82 Markdown sans lien local casse ni fence desequilibree, scans sensibles PASS; `project_context.md` preserve et `LICENSE` identique au texte Apache-2.0 officiel.
 - Le 2026-08-09, l'utilisateur a donne un objectif persistant jusqu'a l'achevement de toutes les phases. Chaque phase reste executee par cycles bornes et gates preuves; cet objectif n'autorise ni boucle aveugle ni contournement d'un blocage securite/permission.
 - Les cinq PR de PHASE-00 ont ete fusionnees par squash dans `develop` (`34926a5` en tete apres integration). `CYCLE-20260809-03` ouvre PHASE-01 avec frontend, rust-core et QA, puis revue securite.
+- `CYCLE-20260809-03` est COMPLETE: PR #7 a #11 integrees, union locale install/lint/test/check/build PASS, puis CI PR `31328840492` et CI `develop` `31329298017` SUCCESS sur Ubuntu, macOS et Windows.
+- Le premier run CI d'union a detecte `icons/icon.png` manquant sur macOS/Linux; le correctif reproductible `70697cd` a ete valide sur les trois OS. Garder la matrice multiplateforme comme gate, meme pour un scaffold minimal.
+- Dette supply chain: `glib 0.18.5` transitif Linux/RUSTSEC-2024-0429 (moyen) a reevaluer en PHASE-02 et a resoudre, prouver inatteignable ou accepter par ADR avant Gate 12; automatiser advisories/licences/sources avant Gate 12.
+- PHASE-02 est READY mais non active tant qu'un cycle explicite architecture/prototypes n'est pas ouvert.

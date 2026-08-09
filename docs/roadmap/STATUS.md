@@ -5,15 +5,15 @@ Responsable: `project-manager`
 
 ## Phase active
 
-`PHASE-01` — `ACTIVE` (`CYCLE-20260809-03`)
+Aucune phase active. `PHASE-02` est `READY`; son cycle explicite reste a ouvrir.
 
 ## Tableau global
 
 | Phase | Etat | Progression | Gate | Preuves | Blocage |
 |---:|---|---:|---|---|---|
 | 00 | DONE | 100% | **PASS** | `docs/project-management/cycles/CYCLE-20260809-02.md`, acceptation utilisateur du 2026-08-09 | aucun |
-| 01 | ACTIVE | 0% | en cours | `docs/project-management/cycles/CYCLE-20260809-03.md` | aucun; fondation en cours |
-| 02 | NOT_STARTED | 0% | verrouille | aucune | depend de 00-01 |
+| 01 | DONE | 100% | **PASS** | `docs/project-management/cycles/CYCLE-20260809-03.md`, CI `31328840492` et `31329298017` | aucun |
+| 02 | READY | 0% | en attente | aucune | cycle explicite a ouvrir |
 | 03 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
 | 04 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
 | 05 | NOT_STARTED | 0% | verrouille | aucune | depend de 04 |
@@ -39,6 +39,7 @@ Responsable: `project-manager`
 | 2026-08-09 | Acceptation explicite de D-01 a D-14 et ouverture du cycle de reevaluation du Gate 00 | utilisateur + project-manager | `docs/project-management/cycles/CYCLE-20260809-02.md` |
 | 2026-08-09 | Cloture `COMPLETE` de PHASE-00 apres propagation, revue croisee et validation d'union | project-manager | `docs/project-management/cycles/CYCLE-20260809-02.md` |
 | 2026-08-09 | Fusion des cinq PR PHASE-00 dans `develop` et ouverture de PHASE-01 | project-manager | PR #1 a #5 fusionnees; `docs/project-management/cycles/CYCLE-20260809-03.md` |
+| 2026-08-09 | Cloture `COMPLETE` de PHASE-01 apres correction multiplateforme et deux matrices CI vertes | project-manager | PR #7 a #11; runs `31328840492` et `31329298017`; `docs/project-management/cycles/CYCLE-20260809-03.md` |
 
 ## Evaluation du Gate 00
 
@@ -57,11 +58,11 @@ La progression de 100% correspond aux six criteres du gate satisfaits sur six; e
 
 | Critere | Verdict | Preuve ou blocage |
 |---|---|---|
-| Clone propre vers build reussi avec instructions seules | PENDING | scaffold et documentation a produire |
-| CI verte sur les trois familles d'OS | PENDING | workflows a produire puis executer |
-| Aucun secret ou chemin utilisateur dans le depot | PENDING | scans finaux requis |
-| Frontend et Rust echangent une commande IPC typee de smoke test | PENDING | contrat `health_check` fige; implementation requise |
-| Worktrees agents sans conflit | PENDING | worktrees prets; validation d'union requise |
+| Clone propre vers build reussi avec instructions seules | PASS | checkout CI, toolchains verrouillees, `pnpm install --frozen-lockfile`, lint, tests, checks et build sur les trois OS |
+| CI verte sur les trois familles d'OS | PASS | PR run `31328840492` puis push `develop` run `31329298017`, tous deux SUCCESS x3 |
+| Aucun secret ou chemin utilisateur dans le depot | PASS | scans de l'union et revue supply chain: zero `.env`, credential ou chemin personnel suivi |
+| Frontend et Rust echangent une commande IPC typee de smoke test | PASS | `health_check` sans requete, reponse `{status:"ok",version:string}`; tests TypeScript et Rust 2/2 |
+| Worktrees agents sans conflit | PASS | union de 47 fichiers uniques sans overlap d'ownership; integrations Git sans conflit |
 
 ## Mode de mise a jour
 
