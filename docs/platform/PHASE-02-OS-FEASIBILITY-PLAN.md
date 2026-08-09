@@ -62,7 +62,7 @@ Si `HW-MAC` devient accessible avant la campagne, elle reste la reference produi
 - Inference: un `HWND` seul est un snapshot insuffisant. Le spike le couple a PID + identite de processus et le revalide sans titre de fenetre.
 - Fait: [`SendInput`](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput) est soumis a UIPI et ne peut injecter que vers un niveau d'integrite egal ou inferieur; son retour ne distingue pas toujours un blocage UIPI.
 - Fait: les operations presse-papiers sont exclusives pendant `OpenClipboard`, detruisent l'ancien contenu avec `EmptyClipboard`, puis publient via `SetClipboardData`; voir [Clipboard Operations](https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-operations). Le [numero de sequence](https://learn.microsoft.com/en-us/windows/win32/dataxchg/about-the-clipboard#clipboard-sequence-number) change avec le contenu.
-- Inference: aucun retour `SendInput` ne vaut confirmation de collage. Seul l'oracle de la fixture cible peut produire `delivered_confirmed`.
+- Inference: aucun retour `SendInput` ne vaut confirmation de collage. Seul l'oracle de la fixture cible peut produire `ConfirmedExact`.
 
 ### 3.2 macOS
 
@@ -173,11 +173,11 @@ Ordre obligatoire:
 1. verifier session non verrouillee et permission encore accordee;
 2. relire la cible active/focalisee avec la meme API;
 3. verifier identifiant fenetre/surface, processus et generation;
-4. refuser si cible nulle, detruite, changee, protegee, elevee, ambigue ou non revalidable;
+4. refuser si cible nulle, detruite, changee, protegee, elevee, ambigue ou non revalidable; si zero effet est prouve, emettre `RejectedBeforeEffect` et conserver l'indication canonique `RawAvailable` selon le contrat architecture;
 5. publier le clipboard Fluent;
 6. verifier que la cible n'a pas change une seconde fois;
 7. simuler uniquement la combinaison de collage;
-8. attendre l'oracle borne de la fixture; sans oracle, produire `delivered_unconfirmed`, jamais `delivered_confirmed`;
+8. attendre l'oracle borne de la fixture; sans oracle, produire `OutcomeUnknown` avec `DELIVERY_OUTCOME_UNKNOWN`, `retryable=false` et aucune nouvelle copie/injection automatique jusqu'a resolution utilisateur, jamais `ConfirmedExact`;
 9. en cas de doute, conserver le texte et afficher L1/L0.
 
 Sous Wayland, l'absence d'identite de cible accessible et revalidable interdit L2. Un consentement portal generique n'est pas une preuve que la bonne application est focalisee.
@@ -199,7 +199,7 @@ Tout texte present une fois dans une mauvaise cible est un echec critique de cam
 1. La fixture utilise uniquement `FLUENT-SPIKE-<run-id>-<counter>`; jamais de contenu utilisateur.
 2. Le spike ne lit, ne persiste, ne sauvegarde et ne restaure jamais l'ancien contenu, y compris pour un cleanup apres crash. Cette interdiction est normative, pas une option de harnais.
 3. L'ecriture vient seulement d'une action utilisateur explicite. Avant l'action `Copier`, un texte accessible annonce: « Le presse-papiers, son historique et sa synchronisation peuvent etre lus par d'autres applications ou appareils; ne l'utilisez pas pour un secret. »
-4. L'UI distingue `ClipboardPrepared` (L1), `ConfirmedExact` (L2/L3), `Unconfirmed`/`OutcomeUnknown` et `InternalRecovery` (L0). Un succes d'API ne change pas seul le resultat en `ConfirmedExact`.
+4. L'UI reprend sans la redefinir la taxonomie architecture: `ClipboardPrepared` (L1), `ConfirmedExact` (L2/L3), `InternalRecoveryAvailable` (L0), `RejectedBeforeEffect` et `OutcomeUnknown`. Un succes d'API ne change pas seul le resultat en `ConfirmedExact`; `OutcomeUnknown` interdit retry ou copie automatique jusqu'a resolution utilisateur.
 5. La valeur synthetique ecrite peut porter un digest uniquement en memoire et, lorsque l'OS l'offre, un numero de sequence/change count. Ni la valeur ni le digest ne sont persistants ou journalises.
 6. Le cleanup represente l'observation d'ownership/sequence par un etat a trois valeurs et applique la table normative ci-dessous.
 7. Le TTL de cleanup est un parametre du spike, teste a `0 s`, `30 s` et `120 s`; ce plan ne choisit pas le TTL produit.
@@ -410,7 +410,7 @@ Le budget candidat existant s'applique seulement apres preuve:
 - Windows/macOS: >= 98 % de texte exact, unique, bonne cible;
 - X11: >= 95 %;
 - chaque taux publie son IC binomial 95 % et au moins 100 essais par cible/capability;
-- un retour API sans egalite exacte de l'oracle est `Unconfirmed` ou `OutcomeUnknown`, donc echec du taux d'injection;
+- un retour API sans egalite exacte de l'oracle est `OutcomeUnknown` avec code canonique et `retryable=false`, donc echec du taux d'injection et aucune seconde action automatique;
 - cible non cooperative, champ protege et frontiere d'integrite doivent echouer explicitement ou passer en fallback, jamais annoncer un faux succes.
 
 Les seuils restent des cibles proposees tant que la Phase 02 ne les a pas approuves avec artefacts.
@@ -485,9 +485,9 @@ Le spike doit rendre observables, visuellement et via etat accessible du helper:
 - `Cible changee — collage annule`;
 - disclosure accessible du risque clipboard/historique/synchronisation avant `Copier le texte`;
 - `ClipboardPrepared — collez manuellement`;
-- `Unconfirmed`/`OutcomeUnknown` distincts de `ConfirmedExact`;
+- `OutcomeUnknown` distinct de `ConfirmedExact`, sans retry/copie automatique;
 - `Permission requise/refusee/revoquee`, avec action de reglage et sans boucle;
-- `InternalRecovery — texte brut disponible` jusqu'a copie explicite ou fin choisie par l'utilisateur.
+- `InternalRecoveryAvailable — texte brut disponible` jusqu'a copie explicite ou fin choisie par l'utilisateur.
 
 Chaque indicateur suit les noms/roles/etats, focus et annonces de section 9. L'indicateur Fluent complete, sans remplacer, les indicateurs OS. Aucun succes n'est deduit de la disparition du widget ou du retour de focus. Si l'indicateur accessible disparait, le watchdog candidat arrete la capture en <= 1 000 ms; il ne transforme pas cette faute en succes.
 
