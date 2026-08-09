@@ -1,0 +1,17 @@
+# Wispr Flow — constats normalises
+
+Consultation : 2026-08-09. Portee : informations publiques, non audit du produit.
+
+| Affirmation | Source directe | Date/version | Nature | Certitude | Consequence Fluent |
+|---|---|---|---|---|---|
+| Flow transforme la parole en texte pret a envoyer sur ordinateur et mobile. | [Offre Platform Engineer](https://jobs.ashbyhq.com/wispr-flow/c5df87d4-73df-467c-91ca-db9a0da64a0a) | consulte le 2026-08-09 | fait | haute | Valider le parcours capture → texte → insertion comme boucle produit principale. |
+| Wispr construit et deploie ses propres modeles vocaux et annonce une P50 mondiale de 500 ms. Ce sont des declarations fournisseur, pas une mesure independante. | [Offre Platform Engineer](https://jobs.ashbyhq.com/wispr-flow/c5df87d4-73df-467c-91ca-db9a0da64a0a) | consulte le 2026-08-09 | fait (declaration) | moyenne | Definir les mesures Fluent (p50/p95, materiel et scenario) sans reprendre cette valeur comme cible garantie. |
+| Sa stack plateforme publiee est Python/FastAPI, PostgreSQL, Redis, Temporal/SQS, Terraform et AWS. | [Offre Platform Engineer](https://jobs.ashbyhq.com/wispr-flow/c5df87d4-73df-467c-91ca-db9a0da64a0a) | consulte le 2026-08-09 | fait | haute | Reference pour le Cloud a grande echelle seulement ; ne pas l'adopter avant un besoin mesure (R-009). |
+| Le mode Privacy decide l'usage eventuel des donnees de dictee pour l'entrainement ; Private Cloud Sync decide leur conservation serveur. Les deux controles sont distincts. | [Privacy Mode and Private Cloud Sync](https://docs.wisprflow.ai/articles/4709791908-understanding-privacy-mode-and-cloud-sync) | maj. env. 2026-08-07, consulte le 2026-08-09 | fait | haute | Exposer des consentements separes : traitement Cloud, retention/sync et amelioration de modele. Le local-first reste le defaut Fluent. |
+| Avec Privacy Mode active et Cloud Sync desactive, Wispr decrit une non-persistance serveur de l'audio dechiffre et des transcriptions du pipeline. | [Security and compliance FAQ](https://docs.wisprflow.ai/articles/3467817258-security-and-compliance-faq) | maj. env. 2026-07-30, consulte le 2026-08-09 | fait (declaration fournisseur) | moyenne | Pour Fluent, viser plus simple : aucune sortie audio en mode local et preuve de flux avant d'ajouter un Cloud. |
+| Context Awareness lit par defaut le texte de l'arbre d'accessibilite ; Screen OCR est opt-in, requiert aussi ce contexte et cible l'ecran du curseur. | [Security and compliance FAQ](https://docs.wisprflow.ai/articles/3467817258-security-and-compliance-faq) | maj. env. 2026-07-30, consulte le 2026-08-09 | fait | haute | Reporter l'OCR hors MVP ; contextualisation minimale, explicite, visible et par application apres threat model. |
+| Les snippets et dictionnaires sont conserves/synchronises independamment des reglages Privacy Mode/Cloud Sync. | [Security and compliance FAQ](https://docs.wisprflow.ai/articles/3467817258-security-and-compliance-faq) | maj. env. 2026-07-30, consulte le 2026-08-09 | fait | haute | Distinguer clairement contenus de dictee et actifs utilisateur. Fluent doit rester local pour ces actifs jusqu'a consentement de sync. |
+
+## Limites connues
+
+Wispr ne publie pas ici le depot client, le framework desktop, les poids/architectures ASR, ni le fournisseur exact de ses couches de formatage. Electron, helpers C#/Swift, OCR implemente ou fournisseurs de LLM ne doivent donc pas etre presentes comme des faits sans source primaire supplementaire.
