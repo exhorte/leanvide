@@ -15,16 +15,29 @@ secrets/
 node_modules/
 dist/
 .vite/
+.pnpm-store/
+.turbo/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Rust
 target/
+**/target/
 
 # Python
 .venv/
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # OS and editors
 .DS_Store
 Thumbs.db
-
+.idea/
+.vscode/*.local.json
