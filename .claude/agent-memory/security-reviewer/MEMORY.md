@@ -1,4 +1,14 @@
 # Memoire security-reviewer
 
 - Menaces prioritaires: audio, accessibilite, clipboard, updater, modeles et retention Cloud.
-
+- Baseline Phase 00: audio et contexte restent locaux sans consentement explicite, specifique et prealable; les opt-in ASR, reecriture, contexte, OCR, sync et telemetrie sont distincts et revocables.
+- Classes stables: C0 public, C1 technique interne, C2 personnel, C3 contenu sensible, C4 secret/credential; les donnees derivees heritent de la classe la plus restrictive.
+- Decisions confirmees le 2026-08-09: zero-history par defaut, historique texte local uniquement sur opt-in avec retention configurable, aucun audio persiste par defaut, aucun compte pour le chemin local et aucun Cloud dans le MVP.
+- Les frontieres Cloud documentees sont exclusivement post-MVP, facultatives et soumises a des consentements separes; zero egress C3 sans consentement, zero retention apres traitement par defaut et telemetrie desactivee tant que son schema n'est pas approuve.
+- Verification prioritaire: absence de contenu dans logs/crash/telemetrie, revalidation de cible et clipboard, coffres OS, signatures/digests updater-modeles, provenance supply chain et suppression couvrant caches/files/sauvegardes.
+- Details restant a specifier: valeurs exactes de retention opt-in, chiffrement de base, fournisseur/region/retention Cloud futurs, schema de telemetrie et gestion des cles. Clipboard et OCR restent soumis aux contraintes normatives et aux validations de phase, sans rouvrir D-08 a D-10.
+- Depot public, Apache-2.0 et modele coeur local gratuit/Cloud futur payant n'affaiblissent ni la privacy ni la supply chain: aucun secret/donnee utilisateur dans le depot, licences des modeles distinctes, aucune exception de securite selon gratuit/payant.
+- Revue PHASE-01 du 2026-08-09: Gate securite PASS pour le shell minimal; aucun secret, chemin personnel, egress, audio, clipboard, OCR, accessibilite, credential, updater, modele, stockage ou Cloud executable.
+- Les actions CI checkout/setup-node/cache sont epinglees par SHA complet et leurs tags officiels ont ete verifies; versions npm/Cargo directes et integrites/checksums correspondent aux registres primaires.
+- Dette supply-chain a suivre: `glib 0.18.5` transitif Linux est vise par `RUSTSEC-2024-0429` (unsoundness) et seize crates transitives sont signalees non maintenues. Reevaluer en PHASE-02; resoudre, prouver inatteignable ou accepter par ADR avant Gate 12/beta.
+- La CI doit encore automatiser advisories Rust, licences, sources/yanked, SBOM et notices. Avant extension IPC, figer `AppManifest::commands`, capabilities, fenetres et origines; les commandes Tauri applicatives sont locales-globales par defaut.
