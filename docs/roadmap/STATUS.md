@@ -5,13 +5,13 @@ Responsable: `project-manager`
 
 ## Phase active
 
-`PHASE-00` — `ACTIVE`
+`PHASE-00` — `ACTIVE` (`GATE 00 BLOCKED`)
 
 ## Tableau global
 
 | Phase | Etat | Progression | Gate | Preuves | Blocage |
 |---:|---|---:|---|---|---|
-| 00 | ACTIVE | 5% | non evalue | `docs/project-management/cycles/CYCLE-20260809-01.md` | decisions produit structurantes a confirmer |
+| 00 | ACTIVE | 50% | BLOCKED | `docs/project-management/cycles/CYCLE-20260809-01.md`, draft PR #1 a #5 | D-01 a D-14 a confirmer |
 | 01 | NOT_STARTED | 0% | verrouille | aucune | depend de 00 |
 | 02 | NOT_STARTED | 0% | verrouille | aucune | depend de 00-01 |
 | 03 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
@@ -35,6 +35,20 @@ Responsable: `project-manager`
 | 2026-08-09 | Ajout de Codex et du routage D0-D3 commun | project-manager/configuration | `AGENTS.md`, `.codex/`, `docs/project-management/MODEL_ROUTING.md` |
 | 2026-08-09 | Ajout du workflow GitHub, branches de domaine, hooks et worktrees | project-manager/configuration | `docs/project-management/GIT_WORKFLOW.md`, `.githooks/`, `scripts/agent-worktree.ps1` |
 | 2026-08-09 | Ouverture du premier cycle controle de PHASE-00 | project-manager | `docs/project-management/cycles/CYCLE-20260809-01.md` |
+| 2026-08-09 | Cloture `BLOCKED` de CYCLE-20260809-01 apres livraison des travaux independants | project-manager | draft PR [#1](https://github.com/exhorte/leanvide/pull/1), [#2](https://github.com/exhorte/leanvide/pull/2), [#3](https://github.com/exhorte/leanvide/pull/3), [#4](https://github.com/exhorte/leanvide/pull/4), [#5](https://github.com/exhorte/leanvide/pull/5) |
+
+## Evaluation du Gate 00
+
+La progression de 50% correspond a trois criteres de gate satisfaits sur six; elle n'est pas une estimation intuitive.
+
+| Critere | Verdict | Preuve ou blocage |
+|---|---|---|
+| MVP compris sans ambiguite par chaque lead | BLOCKED | recommandations consolidees, mais D-01 a D-14 non confirmees dans `docs/project-management/PHASE-00-PRODUCT-DECISIONS.md` |
+| Metriques critiques avec cible et methode | PASS | `docs/quality/PERFORMANCE-BUDGETS.md`, `docs/quality/MEASUREMENT-PLAN.md` dans la draft PR #4 |
+| Plateforme de reference et materiel identifies | BLOCKED | candidats documentes, choix D-03/D-06 non confirme |
+| Flux local/Cloud cartographies | PASS | `docs/security/DATA-FLOWS.md` dans la draft PR #3 |
+| Risques critiques avec proprietaire | PASS | `docs/security/THREAT-MODEL-V0.md` et `docs/roadmap/RISKS.md` |
+| Decision utilisateur sur les choix bloquants | BLOCKED | reponse attendue sur D-01 a D-14 |
 
 ## Mode de mise a jour
 
