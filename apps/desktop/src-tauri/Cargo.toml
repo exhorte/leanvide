@@ -1,0 +1,28 @@
+[package]
+name = "fluent-desktop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+build = "build.rs"
+
+[lib]
+name = "fluent_desktop_lib"
+
+[[bin]]
+name = "fluent"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build.workspace = true
+
+[dependencies]
+fluent-core = { path = "../../../crates/core" }
+tauri.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true
