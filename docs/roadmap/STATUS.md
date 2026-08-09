@@ -5,13 +5,13 @@ Responsable: `project-manager`
 
 ## Phase active
 
-`PHASE-00` — `READY`
+`PHASE-00` — `ACTIVE`
 
 ## Tableau global
 
 | Phase | Etat | Progression | Gate | Preuves | Blocage |
 |---:|---|---:|---|---|---|
-| 00 | READY | 0% | non evalue | aucune | aucun |
+| 00 | ACTIVE | 5% | non evalue | `docs/project-management/cycles/CYCLE-20260809-01.md` | decisions produit structurantes a confirmer |
 | 01 | NOT_STARTED | 0% | verrouille | aucune | depend de 00 |
 | 02 | NOT_STARTED | 0% | verrouille | aucune | depend de 00-01 |
 | 03 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
@@ -34,6 +34,7 @@ Responsable: `project-manager`
 | 2026-08-09 | Creation de la roadmap complete | project-manager/configuration | `docs/roadmap/` |
 | 2026-08-09 | Ajout de Codex et du routage D0-D3 commun | project-manager/configuration | `AGENTS.md`, `.codex/`, `docs/project-management/MODEL_ROUTING.md` |
 | 2026-08-09 | Ajout du workflow GitHub, branches de domaine, hooks et worktrees | project-manager/configuration | `docs/project-management/GIT_WORKFLOW.md`, `.githooks/`, `scripts/agent-worktree.ps1` |
+| 2026-08-09 | Ouverture du premier cycle controle de PHASE-00 | project-manager | `docs/project-management/cycles/CYCLE-20260809-01.md` |
 
 ## Mode de mise a jour
 
