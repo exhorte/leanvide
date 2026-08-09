@@ -1,14 +1,14 @@
 # Baseline securite et confidentialite
 
-Statut: exigences normatives initiales de Fluent. Les termes **DOIT**, **NE DOIT PAS**, **DEVRAIT** et **PEUT** expriment respectivement une obligation, une interdiction, une recommandation forte et une option.
+Statut: **proposition d'exigences soumise a validation produit**. Elle ne ferme pas D-09 (compte obligatoire ou non) ni D-10 (Cloud present ou absent du MVP). Les termes **DOIT**, **NE DOIT PAS**, **DEVRAIT** et **PEUT** expriment la force proposee d'une exigence une fois son perimetre valide.
 
 Cette baseline complete le [threat model](THREAT-MODEL-V0.md), les [flux](DATA-FLOWS.md) et la [classification](DATA-CLASSIFICATION.md). Elle ne remplace pas une notice juridique adaptee aux pays de distribution.
 
 ## Invariants produit
 
-1. Fluent DOIT fonctionner localement sans compte ni reseau, apres acquisition volontaire du modele local requis.
+1. Si D-09 et D-10 confirment un chemin local sans authentification ni reseau, ce chemin DOIT fonctionner apres acquisition volontaire du modele local requis.
 2. Aucune donnee audio ou contextuelle NE DOIT quitter la machine sans consentement explicite, specifique, comprehensible et obtenu avant l'envoi.
-3. Un refus ou une revocation Cloud NE DOIT PAS degrader artificiellement le chemin local.
+3. Un refus ou une revocation Cloud NE DOIT PAS degrader les fonctions qui ne dependent pas du service refuse; si un chemin local est confirme, il reste independant de ce refus.
 4. Aucun failover vers le Cloud, un nouveau fournisseur ou une capture plus large NE DOIT etre silencieux.
 5. Audio, transcription, contexte, OCR, clipboard et credentials NE DOIVENT jamais apparaitre dans logs, telemetrie ou crash reports.
 6. Une reecriture echouee DOIT restituer exactement le texte brut disponible.
@@ -31,7 +31,7 @@ Les activations suivantes NE DOIVENT PAS etre groupees:
 - crash reports/diagnostics;
 - usage futur des donnees pour amelioration ou entrainement.
 
-Chaque ecran de consentement DOIT indiquer en langage simple: finalite, categories exactes, destination/fournisseur, traitement en clair eventuel, region si connue, retention, cout eventuel, consequences du refus et methode de revocation. Une case pre-cochee, un consentement implicite par usage ou une formulation "necessaire" pour une fonction locale sont interdits.
+Chaque ecran de consentement DOIT indiquer en langage simple: finalite, categories exactes, destination/fournisseur, traitement en clair eventuel, region si connue, retention, cout eventuel, consequences du refus et methode de revocation. Une case pre-cochee, un consentement implicite par usage ou une formulation presentant comme necessaire a une fonction independante du service ce qui ne l'est pas sont interdits.
 
 ### Revocation
 
@@ -40,7 +40,7 @@ La revocation DOIT:
 1. stopper les nouvelles captures/transmissions concernees immediatement;
 2. annuler retries et files non envoyees;
 3. supprimer les caches temporaires associes;
-4. conserver les fonctions locales independantes;
+4. conserver les fonctions independantes du service revoque, notamment le chemin local s'il est confirme;
 5. proposer la suppression des donnees distantes deja conservees;
 6. etre accessible sans compte actif lorsque techniquement possible.
 
@@ -94,16 +94,16 @@ Un changement de fournisseur, de finalite, de categorie, de region ou de retenti
 - Les cles API de service et cles privees de signature NE DOIVENT jamais etre embarquees dans le client.
 - Les tests utilisent uniquement des credentials factices. Les revues verifient la forme des flux sans lire de valeur reelle.
 
-## Cloud facultatif et retention
+## Cloud, s'il est retenu, et retention
 
-- Aucun compte NE DOIT etre requis pour le mode local.
+- Si D-09/D-10 confirment le mode local sans authentification, aucun compte NE DOIT etre requis pour ce mode.
 - Chaque requete DOIT minimiser ses champs et etre liee a un consentement encore valide.
 - TLS est obligatoire; l'interface NE DOIT PAS annoncer E2EE si le serveur ou un fournisseur voit le contenu en clair.
 - L'audio et le contexte Cloud ont une retention nulle apres traitement par defaut. Tout TTL technique non nul DOIT etre chiffre, justifie et affiche avant envoi.
 - Fournisseurs, sous-traitants, regions, sauvegardes, suppression et contacts incident DOIVENT etre documentes avant activation production.
 - Retries, timeouts et files DOIVENT etre bornes et annulables. Aucun fournisseur de secours sans nouveau consentement.
 - La synchronisation DOIT etre opt-in par categorie, idempotente et resistante a la resurrection de donnees supprimees.
-- Une panne Cloud DOIT laisser le chemin local utilisable.
+- Une panne Cloud NE DOIT PAS detruire le texte brut deja produit ni declencher un autre fournisseur; si le chemin local est confirme, elle DOIT le laisser utilisable.
 
 ## Logs, telemetrie et support
 
@@ -143,7 +143,7 @@ Un changement de fournisseur, de finalite, de categorie, de region ou de retenti
 | Phases 06-08 | Permissions, indicateurs, revocation, champs proteges, target-switch, clipboard et fallbacks Wayland. |
 | Phase 09 | Minimisation contexte, OCR reste desactive, fallback texte brut exact et transformations tracables. |
 | Phase 10 | Zero-history/zero-telemetry, export/suppression, redaction, corruption/migrations et permissions fichiers. |
-| Phase 11 | Matrice consentements, capture reseau, retention Cloud, auth/revocation, sync/delete et panne totale. |
+| Phase 11 | Matrice consentements, capture reseau, retention Cloud, auth/revocation, sync/delete et panne totale; independance du chemin local uniquement si D-09/D-10 la confirment. |
 | Phase 12 | Revue threat model, fuzz frontieres, audit dependances/licences et zero critique/haute non acceptee. |
 | Phase 13 | Signature/notarisation, updater/rollback/retrait, notice exacte et incident response. |
 
@@ -155,6 +155,8 @@ Une suspicion d'enregistrement non arrete, d'egress non consenti, de credential 
 
 Les points suivants ne sont pas fixes par cette baseline et necessitent produit/ADR avant implementation definitive:
 
+- D-09: compte obligatoire ou non, notamment pour le chemin local candidat;
+- D-10: Cloud present ou absent du MVP et fonctions qui en dependent;
 - historique active ou non par defaut et durees de retention locales;
 - restauration/expiration du clipboard par OS;
 - perimetre contextuel exact et eventuelles listes d'exclusion utilisateur;

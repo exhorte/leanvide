@@ -1,6 +1,6 @@
 # Classification des donnees
 
-Cette classification s'applique aux donnees en memoire, fichiers, base locale, IPC, logs, crash reports, exports, sauvegardes, requetes reseau, files Cloud et outils de support.
+Cette classification s'applique aux donnees en memoire, fichiers, base locale, IPC, logs, crash reports, exports, sauvegardes, requetes reseau, files Cloud et outils de support. Elle est agnostique aux decisions D-09/D-10: decrire un lieu local ou Cloud ne confirme ni l'absence de compte ni la presence du Cloud dans le MVP.
 
 Principe: une donnee derivee, agregee ou jointe herite de la classe la plus restrictive de ses sources. En cas de doute, choisir la classe superieure jusqu'a revue.
 

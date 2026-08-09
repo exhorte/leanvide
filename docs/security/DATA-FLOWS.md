@@ -1,6 +1,6 @@
 # Flux de donnees local et Cloud
 
-Statut: cartographie logique Phase 00. Les composants et fournisseurs exacts seront confirmes par ADR et par les implementations.
+Statut: cartographie logique Phase 00 soumise a validation. Elle represente les branches locales et Cloud possibles sans fermer D-09 (compte obligatoire ou non) ni D-10 (Cloud present ou absent du MVP). Les composants et fournisseurs exacts seront confirmes par decision produit, ADR et implementation.
 
 Regle normative: **aucune donnee audio ou contextuelle ne quitte la machine sans consentement explicite et comprehensible avant le transfert**.
 
@@ -14,7 +14,7 @@ Voir aussi [Threat model v0](THREAT-MODEL-V0.md), [Classification](DATA-CLASSIFI
 | Z1 | Coeur Rust et adaptateurs OS | Autorite locale pour capture, traitement, permissions et effacement. |
 | Z2 | WebView/UI et IPC Tauri | Moins privilegiee; aucune lecture directe de secret ou buffer audio brut. |
 | Z3 | Stockage local, coffre OS, repertoire des modeles | Persistant; acces et integrite a proteger. |
-| Z4 | API Fluent Cloud facultative | Distante; acces seulement apres consent gate et authentification si necessaire. |
+| Z4 | API Fluent Cloud, si retenue | Distante; acces seulement apres consent gate et authentification si necessaire. |
 | Z5 | Fournisseur ASR/LLM, telemetrie ou autre sous-traitant | Frontiere tierce distincte, affichee avant activation. |
 | Z6 | CI, depot d'artefacts, CDN updater/modeles | Canal de distribution non autorise a recevoir du contenu utilisateur. |
 
@@ -74,7 +74,7 @@ Z0 element cible -> API accessibilite -> filtre/minimisation Z1
                   -> Cloud uniquement apres opt-in contexte distinct
 ```
 
-Le nom d'application, le type de champ et une selection bornee peuvent servir de hints. Le texte alentour n'est pas un historique implicite. Les champs de mot de passe/proteges et les applications exclues ne sont jamais lus. Le refus de permission n'empeche pas la transcription locale.
+Le nom d'application, le type de champ et une selection bornee peuvent servir de hints. Le texte alentour n'est pas un historique implicite. Les champs de mot de passe/proteges et les applications exclues ne sont jamais lus. Le refus de permission n'empeche pas une transcription sans contexte lorsque cette capacite fait partie du perimetre confirme.
 
 ## DF-04 — OCR facultatif
 
@@ -154,7 +154,7 @@ Ce flux ne partage aucun endpoint ou stockage avec le contenu utilisateur. TLS n
 
 | Flux sortant | Etat par defaut | Consentement requis | Revocation |
 |---|---|---|---|
-| Telechargement updater/modeles | Autorise pour donnees C0-C1 minimales; choix d'auto-download a decider | Information claire; aucun contenu utilisateur | Desactive les controles automatiques selon politique sans casser l'usage local existant. |
+| Telechargement updater/modeles | Autorise pour donnees C0-C1 minimales; choix d'auto-download a decider | Information claire; aucun contenu utilisateur | Desactive les controles automatiques selon politique sans casser les fonctions deja installees qui n'en dependent pas. |
 | ASR Cloud | Desactive | Opt-in ASR, donnees audio, destination et retention | Stop immediat, annule retries et purge files locales. |
 | Reecriture Cloud | Desactive | Opt-in reecriture; texte transmis et fournisseur | Retour au texte brut local; aucun failover tiers. |
 | Contexte vers Cloud | Desactive meme si ASR/reecriture active | Opt-in distinct accessibilite/OCR | Stop immediat, traitement sans contexte. |
