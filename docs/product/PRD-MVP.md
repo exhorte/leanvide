@@ -133,7 +133,7 @@ Les transitions, timeouts et contrats IPC seront figés en Phase 02. `RECOVERABL
 
 | Catégorie | Besoin MVP candidat | Lieu candidat | Rétention | Statut |
 |---|---|---|---|---|
-| échantillons audio de la dictée | nécessaire au traitement | mémoire ou fichier temporaire local strictement borné | destruction après traitement proposée | D-08 ouverte |
+| échantillons audio de la dictée | nécessaire au traitement | buffer borné en mémoire locale par défaut; aucun fichier temporaire implicite | purge à la fin, à l'annulation ou à la révocation par défaut; toute exception exige une décision et une conception sécurité dédiées | D-08 ouverte |
 | texte ASR brut | nécessaire à la récupération | mémoire, puis stockage seulement si historique confirmé | à décider | D-08 ouverte |
 | texte final | remise et éventuel historique | local | à décider | D-08 ouverte |
 | paramètres | nécessaire | stockage local | jusqu'à réinitialisation | proposition |
@@ -150,27 +150,26 @@ Les transitions, timeouts et contrats IPC seront figés en Phase 02. `RECOVERABL
 - une option Cloud, si elle existe, doit être distinguée du traitement local avant l'action;
 - les durées de rétention ne seront pas inventées par l'implémentation.
 
-La proposition « aucune rétention audio » reste à confirmer dans D-08, malgré sa cohérence avec la minimisation.
+D-08 reste ouverte sur l'historique et sur l'existence éventuelle d'une option de persistance audio. Tant qu'elle n'est pas tranchée, la baseline de sécurité impose des buffers audio bornés en mémoire locale, leur purge à la fin, à l'annulation ou à la révocation, et aucun fichier temporaire implicite. Ce défaut conservateur n'anticipe pas la décision produit finale.
 
 ## 8. Budgets et méthodes de mesure
 
-Les chiffres ci-dessous sont des **seuils candidats**, pas des engagements. Ils ne peuvent être validés qu'après D-03, D-05 et D-06.
+[PERFORMANCE-BUDGETS.md](../quality/PERFORMANCE-BUDGETS.md) est l'unique source canonique des valeurs, unités, percentiles, matériels candidats et conditions de qualification. Le PRD ne duplique aucun seuil numérique: toute divergence est résolue en faveur du document QA, dont les cibles restent proposées jusqu'aux prototypes de Phase 02 et aux décisions D-03, D-05 et D-06. [MEASUREMENT-PLAN.md](../quality/MEASUREMENT-PLAN.md) définit les campagnes et artefacts reproductibles.
 
-| Métrique | Définition | Seuil candidat | Méthode proposée | Statut |
-|---|---|---:|---|---|
-| temps d'armement | événement de contrôle -> premier buffer accepté | p95 <= 100 ms | 100 activations à froid/chaud, horloge monotone | ouvert |
-| latence fin-de-parole | dernier échantillon utile -> texte brut disponible | p50 <= 1,0 s; p95 <= 2,5 s pour 10 s de parole | corpus fixe, modèle/langue/matériel nommés | ouvert |
-| RTF | durée de calcul ASR / durée audio | p95 <= 1,0 | corpus d'au moins 30 min par profil matériel | ouvert |
-| WER | `(S + D + I) / N` après normalisation publiée | cible à fixer après baseline | corpus versionné et revue des règles de normalisation | ouvert; aucune valeur arbitraire |
-| mémoire au repos | RSS après stabilisation | <= 200 Mio hors modèle chargé | mesure OS sur 30 min | ouvert |
-| mémoire active | pic RSS pendant ASR | cible par modèle à fixer | scénarios courts/longs, sans swap | ouvert |
-| CPU au repos | utilisation processus | p95 <= 2 % d'un cœur logique | fenêtre de 30 min sans capture | ouvert |
-| crash-free sessions | sessions sans arrêt inattendu | >= 99,5 % en bêta | télémétrie opt-in ou journaux locaux agrégés | ouvert et dépend du consentement |
-| remise réussie | texte confirmé dans la cible / tentatives compatibles | >= 95 % sur matrice de référence | harness par application et OS | ouvert |
-| récupération | résultat copiable après échec de remise | 100 % des cas où un texte brut existe | tests d'injection refusée/focus perdu | proposition forte |
-| perte audio | échantillons manquants dans le pipeline | 0 perte due à un blocage du callback dans le test nominal; taux sous stress à fixer | compteurs hors callback et stress test | ouvert |
+| Observable produit | Résultat mesurable attendu | Preuve canonique | Statut produit |
+|---|---|---|---|
+| armement et fin de parole | transitions horodatées par horloge monotone, percentiles publiés séparément pour PTT et VAD | budgets « Armement PTT », « Fin de parole PTT/VAD » et campagne de latence QA | D-03/D-06/D-07 ouvertes |
+| vitesse ASR locale | RTF par fichier et sous-corpus avec moteur, modèle, quantification et préchargement déclarés | budget « RTF ASR local » et campagne ASR QA | D-03/D-05/D-06 ouvertes |
+| exactitude brute | WER et CER avec normaliseur, corpus, sous-corpus et intervalle de confiance versionnés | budgets « WER/CER » et campagne d'exactitude QA | D-02/D-05 ouvertes |
+| ressources | CPU en cœurs logiques équivalents et RSS du processus avec enfants, mesurés séparément en mode armé, capture et ASR | budgets « CPU » et « Mémoire », série temporelle QA | D-03/D-06 ouvertes |
+| remise du texte | taux par OS, application et capability; succès seulement si le texte exact apparaît une fois dans la bonne cible | budget « Injection réussie » et matrice d'injection QA | D-03/D-04 ouvertes |
+| fallback Wayland | presse-papiers préparé, instruction visible et absence de faux succès, compositor identifié | budget « Fallback Wayland » et campagne dédiée QA | capacité à prouver; D-03/D-04 ouvertes |
+| continuité audio | taux de trames perdues et trou maximal issus de numéros de séquence, sous charge et sur campagne microphone | budget « Perte d'échantillons » et campagne de continuité QA | D-03/D-06 ouvertes |
+| fiabilité | sessions éligibles, crashs et borne d'intervalle de confiance selon une collecte consentie | budget « Sessions sans crash » et campagne de fault injection QA | dépend du consentement et de la politique de collecte |
+| démarrage et modèles | temps chaud/froid jusqu'à `ready`, taille d'artefact et espace temporaire de téléchargement vérifié | budgets « Démarrage » et « Disque des modèles » | D-03/D-06 ouvertes |
+| récupération après échec | le texte brut existant reste récupérable sans relancer l'ASR | tests d'injection refusée, cible changée et focus perdu | proposition produit à confirmer |
 
-Les mesures doivent publier version OS, CPU, RAM, architecture, accélérateur, moteur, modèle, langue, durée audio, build et état thermique. Une moyenne seule ne suffit pas; p50/p95 et échecs sont conservés.
+Chaque résultat doit référencer une campagne QA avec commit, version OS, CPU, RAM, architecture, accélérateur, moteur, modèle, quantification, langue, corpus ou fixture, périphérique audio et profil d'alimentation. Une moyenne isolée ou l'absence d'erreur observée ne constitue pas une preuve.
 
 ## 9. Compatibilité et dégradation
 
