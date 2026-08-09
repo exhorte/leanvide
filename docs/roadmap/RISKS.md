@@ -30,11 +30,11 @@ Chaque risque recoit ensuite: date de revue, indicateurs, plan de contingence et
 | R-001 | ouvert | Wayland est separe de X11 dans le PRD, la QA et l'ADR; fallback L1/L0 obligatoire | matrice par compositor en Phase 02/07 |
 | R-002 | ouvert | budgets de pertes et contrat callback documentes, aucun prototype executable | stress tests audio apres choix du materiel |
 | R-006 | ouvert, controle de conception defini | TM-01 a TM-18, flux et classes C0-C4 dans la draft PR #3 | revalider aux phases 02, 10, 11, 12 et 13 |
-| R-008 | mitigation exercee | un edit hors ownership de `project_context.md` sur `work/research` a ete restaure; integration finale: 22 fichiers de branche sans chevauchement | controle automatique d'ownership a chaque cycle |
+| R-008 | mitigation exercee | un edit hors ownership de `project_context.md` sur `work/research` a ete restaure; integration finale: 27 fichiers de branche sans chevauchement | controle automatique d'ownership a chaque cycle |
 | R-011 | ouvert | exigences SBOM, signatures, digests et provenance documentees | audit des premieres dependances/modeles en Phase 01/02 |
 | R-013 | **bloquant** | aucune des 14 decisions n'est confirmee | attendre l'arbitrage utilisateur; ne pas demarrer Phase 01 |
 | R-014 | ouvert, eleve | visibilite GitHub publique confirmee; aucune licence suivie | arbitrage D-11/D-12 avant integration publique organisee |
 | R-015 | ouvert | zero artefact `.cs`, `.csproj`, `.sln`, `.xaml` dans ce depot | demander depot/chemin externe ou confirmer greenfield |
 | R-016 | ouvert | cibles, protocoles et trois machines candidates documentes; aucune baseline | choix D-03/D-05/D-06 puis prototypes |
 | R-017 | mitige | sources directes datees et nature fournisseur explicite dans la draft PR #2 | revalidation lors de toute decision issue d'un concurrent |
-| R-018 | mitige avant merge | fusion locale temporaire des quatre branches sans conflit; 18/18 livrables et liens locaux valides | ne fusionner qu'apres arbitrage et revue coordonnee |
+| R-018 | mitige avant merge | fusion locale temporaire des cinq branches sans conflit; 18/18 livrables et liens locaux valides | ne fusionner qu'apres arbitrage et revue coordonnee |
