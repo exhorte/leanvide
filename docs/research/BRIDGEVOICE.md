@@ -15,4 +15,3 @@ Consultation : 2026-08-09. Sources : documentation et changelog edites par Bridg
 ## Limites connues
 
 Les APIs natives exactes, crates, format de stockage local et details du ring buffer ne sont pas publies. Les utiliser comme recommandations d'architecture serait une inference ; les presenter comme implementation BridgeVoice serait excessif.
-

@@ -32,4 +32,3 @@ Consequences : ne pas adopter la plateforme Cloud de Wispr (Temporal/SQS/Redis) 
 3. ASR : benchmark materiels de reference, RTF/WER/memoire et telechargement verifie des modeles.
 4. UX : widget froid rapide et renderer de niveau audio isole.
 5. Donnees : texte brut deterministe conserve avant toute reecriture ; Cloud et contexte toujours opt-in.
-
