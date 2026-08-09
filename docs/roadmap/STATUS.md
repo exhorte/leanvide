@@ -5,13 +5,13 @@ Responsable: `project-manager`
 
 ## Phase active
 
-`PHASE-00` — `ACTIVE` (`GATE 00 BLOCKED`)
+`PHASE-00` — `ACTIVE` (`GATE 00 EN REEVALUATION`)
 
 ## Tableau global
 
 | Phase | Etat | Progression | Gate | Preuves | Blocage |
 |---:|---|---:|---|---|---|
-| 00 | ACTIVE | 50% | BLOCKED | `docs/project-management/cycles/CYCLE-20260809-01.md`, draft PR #1 a #5 | D-01 a D-14 a confirmer |
+| 00 | ACTIVE | 50% | en reevaluation | `docs/project-management/cycles/CYCLE-20260809-02.md`, acceptation utilisateur du 2026-08-09 | aucun blocage produit; propagation documentaire en cours |
 | 01 | NOT_STARTED | 0% | verrouille | aucune | depend de 00 |
 | 02 | NOT_STARTED | 0% | verrouille | aucune | depend de 00-01 |
 | 03 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
@@ -36,6 +36,7 @@ Responsable: `project-manager`
 | 2026-08-09 | Ajout du workflow GitHub, branches de domaine, hooks et worktrees | project-manager/configuration | `docs/project-management/GIT_WORKFLOW.md`, `.githooks/`, `scripts/agent-worktree.ps1` |
 | 2026-08-09 | Ouverture du premier cycle controle de PHASE-00 | project-manager | `docs/project-management/cycles/CYCLE-20260809-01.md` |
 | 2026-08-09 | Cloture `BLOCKED` de CYCLE-20260809-01 apres livraison des travaux independants | project-manager | draft PR [#1](https://github.com/exhorte/leanvide/pull/1), [#2](https://github.com/exhorte/leanvide/pull/2), [#3](https://github.com/exhorte/leanvide/pull/3), [#4](https://github.com/exhorte/leanvide/pull/4), [#5](https://github.com/exhorte/leanvide/pull/5) |
+| 2026-08-09 | Acceptation explicite de D-01 a D-14 et ouverture du cycle de reevaluation du Gate 00 | utilisateur + project-manager | `docs/project-management/cycles/CYCLE-20260809-02.md` |
 
 ## Evaluation du Gate 00
 
