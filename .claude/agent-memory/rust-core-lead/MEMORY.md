@@ -7,3 +7,4 @@
 - L'identifiant `io.github.exhorte.fluent` reste strictement provisoire et le bundling est desactive jusqu'aux travaux de packaging.
 - Aucun chemin audio/ASR/OS/stockage/Cloud n'est introduit en PHASE-01; les contrats correspondants restent a figer en PHASE-02.
 - `tauri-build` genere `apps/desktop/src-tauri/gen/schemas/**`; ces artefacts ne doivent pas etre commits et la regle d'ignore appartient au lot QA.
+- Les builds desktop Tauri exigent les deux derives du placeholder: `icon.ico` sous Windows et `icon.png` sous macOS/Linux; les regenerer ensemble depuis `placeholder.svg` avec la CLI Tauri verrouillee.
