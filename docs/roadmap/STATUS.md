@@ -5,14 +5,14 @@ Responsable: `project-manager`
 
 ## Phase active
 
-Aucune phase `ACTIVE`. `PHASE-00` est `DONE`; `PHASE-01` est `READY` mais n'est pas demarree.
+`PHASE-01` — `ACTIVE` (`CYCLE-20260809-03`)
 
 ## Tableau global
 
 | Phase | Etat | Progression | Gate | Preuves | Blocage |
 |---:|---|---:|---|---|---|
 | 00 | DONE | 100% | **PASS** | `docs/project-management/cycles/CYCLE-20260809-02.md`, acceptation utilisateur du 2026-08-09 | aucun |
-| 01 | READY | 0% | entree autorisee; Gate 01 non evalue | Gate 00 PASS | attend un objectif et un cycle explicites |
+| 01 | ACTIVE | 0% | en cours | `docs/project-management/cycles/CYCLE-20260809-03.md` | aucun; fondation en cours |
 | 02 | NOT_STARTED | 0% | verrouille | aucune | depend de 00-01 |
 | 03 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
 | 04 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
@@ -38,6 +38,7 @@ Aucune phase `ACTIVE`. `PHASE-00` est `DONE`; `PHASE-01` est `READY` mais n'est 
 | 2026-08-09 | Cloture `BLOCKED` de CYCLE-20260809-01 apres livraison des travaux independants | project-manager | draft PR [#1](https://github.com/exhorte/leanvide/pull/1), [#2](https://github.com/exhorte/leanvide/pull/2), [#3](https://github.com/exhorte/leanvide/pull/3), [#4](https://github.com/exhorte/leanvide/pull/4), [#5](https://github.com/exhorte/leanvide/pull/5) |
 | 2026-08-09 | Acceptation explicite de D-01 a D-14 et ouverture du cycle de reevaluation du Gate 00 | utilisateur + project-manager | `docs/project-management/cycles/CYCLE-20260809-02.md` |
 | 2026-08-09 | Cloture `COMPLETE` de PHASE-00 apres propagation, revue croisee et validation d'union | project-manager | `docs/project-management/cycles/CYCLE-20260809-02.md` |
+| 2026-08-09 | Fusion des cinq PR PHASE-00 dans `develop` et ouverture de PHASE-01 | project-manager | PR #1 a #5 fusionnees; `docs/project-management/cycles/CYCLE-20260809-03.md` |
 
 ## Evaluation du Gate 00
 
@@ -51,6 +52,16 @@ La progression de 100% correspond aux six criteres du gate satisfaits sur six; e
 | Flux local/Cloud cartographies | PASS | `docs/security/DATA-FLOWS.md` dans la draft PR #3 |
 | Risques critiques avec proprietaire | PASS | `docs/security/THREAT-MODEL-V0.md` et `docs/roadmap/RISKS.md` |
 | Decision utilisateur sur les choix bloquants | PASS | acceptation explicite « J’accepte D-01 à D-14 telles que recommandées. » recue le 2026-08-09 |
+
+## Evaluation du Gate 01
+
+| Critere | Verdict | Preuve ou blocage |
+|---|---|---|
+| Clone propre vers build reussi avec instructions seules | PENDING | scaffold et documentation a produire |
+| CI verte sur les trois familles d'OS | PENDING | workflows a produire puis executer |
+| Aucun secret ou chemin utilisateur dans le depot | PENDING | scans finaux requis |
+| Frontend et Rust echangent une commande IPC typee de smoke test | PENDING | contrat `health_check` fige; implementation requise |
+| Worktrees agents sans conflit | PENDING | worktrees prets; validation d'union requise |
 
 ## Mode de mise a jour
 
