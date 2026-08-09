@@ -18,3 +18,4 @@
 - Le premier run CI d'union a detecte `icons/icon.png` manquant sur macOS/Linux; le correctif reproductible `70697cd` a ete valide sur les trois OS. Garder la matrice multiplateforme comme gate, meme pour un scaffold minimal.
 - Dette supply chain: `glib 0.18.5` transitif Linux/RUSTSEC-2024-0429 (moyen) a reevaluer en PHASE-02 et a resoudre, prouver inatteignable ou accepter par ADR avant Gate 12; automatiser advisories/licences/sources avant Gate 12.
 - PHASE-02 est READY mais non active tant qu'un cycle explicite architecture/prototypes n'est pas ouvert.
+- `CYCLE-20260809-04` ouvre PHASE-02 par une tranche contracts-first: quatre leads produisent ADR/contrats et plans de preuve sans implementation runtime, puis une revue securite independante; les prototypes ne commencent qu'apres cette integration.
