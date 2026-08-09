@@ -1,21 +1,41 @@
 # ADR-0002 — Runtime modulaire, single-writer et contrats bornés
 
-- Statut: **Proposed**
+- Statut: **Accepted-for-spike**
 - Date: 2026-08-09
-- Décideurs proposés: project-manager, product-architect, rust-core-lead,
+- Décideurs et relecteurs: project-manager, product-architect, rust-core-lead,
   ai-asr-lead, platform-lead et security-reviewer
 - Portée: architecture runtime desktop locale et contrats des prototypes
   PHASE-02
 - Décision supérieure: [ADR-0001](ADR-0001-STACK-CIBLE.md)
-- Retour arrière: documentaire tant que le statut reste Proposed; adaptateurs
-  jetables jusqu'à promotion explicite
+- Retour arrière: retirer l'autorisation de spike et amender l'ADR; les
+  adaptateurs restent jetables jusqu'à promotion produit explicite
 
 ## 1. Statut et niveau de preuve
 
-Cet ADR est une décision d'architecture **proposée**, pas une preuve de
-faisabilité et pas une acceptation produit. Il reste Proposed jusqu'à la revue
-croisée technique et sécurité du cycle. Il n'autorise aucune implémentation
-runtime, dépendance, permission, commande IPC supplémentaire ou WebView.
+Cet ADR est **Accepted-for-spike** depuis le 2026-08-09, à la suite du Gate
+contrat PASS de la
+[re-review sécurité PHASE-02 r2](https://github.com/exhorte/leanvide/blob/6138e909e551144a84359d88c638176004d2e9d4/docs/security/PHASE-02-CONTRACT-REVIEW.md)
+([PR #17](https://github.com/exhorte/leanvide/pull/17)). Ce statut autorise
+uniquement des prototypes jetables soumis aux conditions de la section 13. Il
+n'est ni une preuve de faisabilité, ni **Accepted-for-product**, ni une
+autorisation générale d'implémentation runtime, de dépendance, permission,
+commande IPC supplémentaire ou WebView.
+
+La décision s'appuie sur l'union r2 suivante:
+
+| Lot revu | Révision immuable |
+|---|---|
+| base `origin/develop` | `03f8206f8df762f812b748d8b21f28825dd53b43` |
+| architecture | `3f3a6d2bf10c73b5950895281e0922dd716dffd8` |
+| rust-core | `ed043d9b623fd5d07a8b1c251f84371d9bea5758` |
+| plateforme | `e01acf228a8930e43dc86032976880bfbdcdae56` |
+| ASR | `840ae994d1a0636d5a89cd0eb69bcd7050ca0662` |
+| re-review sécurité r2 | `6138e909e551144a84359d88c638176004d2e9d4` |
+
+Le **Gate 02 reste PENDING** et toutes les campagnes de spike restent
+**NOT_RUN**. La promotion **Accepted-for-product est interdite** tant que les
+preuves reproductibles du Gate 02 et la re-review correspondante ne sont pas
+achevées.
 
 États de décision utilisés:
 
@@ -26,9 +46,9 @@ runtime, dépendance, permission, commande IPC supplémentaire ou WebView.
 | Accepted-for-product | preuves Gate 02 satisfaites et risques critiques mitigés; nouveau changement via ADR |
 | Rejected/Superseded | option abandonnée ou remplacée avec chemin de rollback documenté |
 
-Le passage Accepted-for-spike exige la section 13. Accepted-for-product exige
-en plus les résultats des spikes et le Gate 02; il ne peut pas résulter de ce
-cycle contracts-first seul.
+Le maintien d'Accepted-for-spike exige la section 13. Accepted-for-product
+exige en plus les résultats des spikes et le Gate 02; il ne peut pas résulter
+de ce cycle contracts-first seul.
 
 ## 2. Contexte
 
@@ -93,7 +113,7 @@ ils ne prouvent pas que les prototypes réussiront.
 10. Le rollback ne doit dépendre d'aucune migration de donnée utilisateur
     pendant les spikes.
 
-## 5. Décision proposée
+## 5. Décision retenue pour les spikes
 
 Adopter l'option A: **un runtime local dans un processus, un orchestrateur
 single-writer et des adaptateurs hexagonaux derrière cinq ports**, avec workers
@@ -304,9 +324,13 @@ Un déclencheur n'autorise pas un correctif silencieux. Le project-manager arrê
 les lots dépendants et ouvre un ADR si la frontière de processus, la machine
 d'états, un port ou la garantie local-first doit changer.
 
-## 13. Conditions de passage Accepted-for-spike
+## 13. Conditions non négociables d'Accepted-for-spike
 
-Toutes les conditions suivantes sont requises:
+La re-review sécurité r2 ferme B-01, H-01 et M-03 au niveau contrat, et considère
+H-02, M-01 et M-02 mitigés sous conditions. Elle ne dispense d'aucune preuve
+exécutable: elle ne relève aucun blocker, mais toutes les campagnes restent
+NOT_RUN. Les conditions suivantes sont requises pendant chaque spike et pour
+maintenir ce statut:
 
 - revue croisée rust-core, ASR, plateforme et sécurité sans contradiction
   bloquante;
@@ -319,11 +343,42 @@ Toutes les conditions suivantes sont requises:
   métriques et PASS/FAIL;
 - aucune implémentation distante, permission, deuxième commande/WebView,
   dépendance ou donnée persistée introduite par l'ADR;
-- F-01/F-02/F-03/F-05 présents dans les gates des plans concernés;
-- avant tout code C4, choix explicite entre le harnais coffre test-only jetable
-  de [CORE-CONTRACTS.md](CORE-CONTRACTS.md) et un ADR/contrat produit versionné;
+- local-first strict, zéro egress audio, texte ou secret; les campagnes build
+  et ASR bloquent le réseau et toute tentative d'egress est un FAIL, même si le
+  pare-feu l'intercepte;
+- F-03 PASS avant toute mutation de manifest, lockfile, action CI ou source de
+  dépendance; toute exception nomme propriétaire, expiration et condition de
+  sortie;
+- tout code C4 utilise exclusivement le `VaultHarness` synthétique test-only,
+  jetable, absent du binaire produit et sans lecture de secret réel; une
+  frontière C4 produit exige auparavant un nouvel ADR, un contrat versionné et
+  une re-review sécurité;
+- le modèle est acquis manuellement depuis un manifeste épinglé et doublement
+  revu, jamais auto-téléchargé ni résolu depuis une URL libre; il reste en
+  quarantaine fail-closed, bornée à 2 GiB, 8 entrées et 24 h, avec réserve,
+  inventaire et cleanup idempotent;
+- chaque campagne hotkey/fallback commence par `a11y-preflight`; un
+  environnement absent est `UNAVAILABLE_ENVIRONMENT`, jamais PASS; la perte de
+  l'indicateur accessible refuse l'armement ou arrête la capture via watchdog;
+- un clipboard `CHANGED` ou `UNKNOWN`, y compris après crash/restart, entraîne
+  zéro mutation; seul `MATCHED` peut être expérimenté sans constituer un choix
+  produit;
+- après `DELIVERY_OUTCOME_UNKNOWN`, aucun retry ni copie automatique; les deux
+  branches de résolution explicite exigent des tests de modèle et une future UX
+  accessible avant promotion;
+- F-05 PASS avant toute seconde commande IPC, WebView, origine ou permission;
+  le registre exécutable reste limité à `health_check`;
+- F-01 reste `OPEN_UNPROVEN` et F-02 reste ouvert sous allowlist bornée; aucune
+  promotion Linux sans disposition et preuves;
+- les verdicts citent commande, environnement, artefacts et oracles
+  reproductibles; une machine, technologie d'assistance, coffre, plateforme ou
+  outil absent ne peut jamais produire PASS;
 - liens et cohérence documentaire validés dans l'union du cycle;
 - security-reviewer confirme absence d'egress implicite et permissions minimales.
+
+Tout besoin de Cloud, OCR/contexte, updater, persistance C3, C4 produit, ou
+toute modification de la garantie local-first arrête le spike et exige un
+nouvel ADR ainsi qu'une re-review sécurité avant reprise.
 
 Accepted-for-spike signifie seulement que les prototypes peuvent tester les
 ports. Il ne promeut ni Tauri, ni whisper.cpp, ni SQLite, ni une voie OS.
@@ -381,8 +436,8 @@ ou une unique exécution ne suffit pas.
 
 ### Avant les spikes
 
-Supprimer ou amender les documents Proposed. Aucun binaire, permission, store
-ou donnée n'est affecté.
+Retirer Accepted-for-spike ou amender les documents. Aucun binaire, permission,
+store ou donnée n'est affecté.
 
 ### Pendant les spikes
 
@@ -457,7 +512,8 @@ harness; jamais une constante produit silencieuse.
 
 Réexaminer cet ADR:
 
-- après revue croisée du cycle pour un éventuel Accepted-for-spike;
+- après toute modification des contrats ou d'une condition non négociable
+  d'Accepted-for-spike;
 - après chaque campagne de prototype avant Accepted-for-product;
 - si deux implémentations conformes échouent sur un même invariant critique;
 - si le MVP exige persistance C3, Cloud, multi-session, streaming ASR, processus
