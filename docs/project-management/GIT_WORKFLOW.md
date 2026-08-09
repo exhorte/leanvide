@@ -10,6 +10,7 @@ Conserver `main` stable, integrer les travaux dans `develop`, isoler chaque doma
 |---|---|---|
 | `main` | project-manager | versions stables et jalons valides |
 | `develop` | project-manager | integration des cycles termines |
+| `work/project-management` | project-manager | roadmap, rapports de cycles et coordination |
 | `work/product-architecture` | product-architect | PRD, ADR et architecture |
 | `work/frontend` | frontend-lead | React, Tauri UI, shadcn/ui |
 | `work/rust-core` | rust-core-lead | audio, etats, SQLite et IPC Rust |
@@ -64,4 +65,3 @@ Le push ne remplace pas la discipline de commit: les agents doivent committer un
 ## Urgence
 
 Un hotfix part de `main` sous `hotfix/<description>`, passe par PR vers `main`, puis est reporte dans `develop`. Aucun contournement des hooks ou de la protection de branche sans incident documente.
-

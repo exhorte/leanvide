@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('product-architecture','frontend','rust-core','platform','ai-asr','backend','qa-release','security')]
+    [ValidateSet('project-management','product-architecture','frontend','rust-core','platform','ai-asr','backend','qa-release','security')]
     [string]$Role
 )
 
@@ -38,4 +38,3 @@ if ($LASTEXITCODE -ne 0) { throw 'Echec de creation du worktree.' }
 
 Write-Output "Worktree pret: $target"
 Write-Output "Branche: $branch"
-
