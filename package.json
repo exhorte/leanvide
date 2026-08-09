@@ -1,0 +1,18 @@
+{
+  "name": "fluent",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.8.0",
+  "engines": {
+    "node": "24.15.0",
+    "pnpm": "11.8.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @fluent/desktop tauri dev",
+    "build": "pnpm --filter @fluent/desktop tauri build",
+    "test": "pnpm --filter @fluent/desktop test && cargo test --workspace",
+    "lint": "pnpm --filter @fluent/desktop lint && cargo fmt --check && cargo clippy --workspace --all-targets -- -D warnings",
+    "typecheck": "pnpm --filter @fluent/desktop typecheck",
+    "check": "pnpm --filter @fluent/desktop check && cargo test --workspace && cargo fmt --check && cargo clippy --workspace --all-targets -- -D warnings"
+  }
+}
