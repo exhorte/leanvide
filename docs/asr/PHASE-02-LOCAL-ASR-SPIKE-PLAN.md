@@ -60,7 +60,7 @@ TranscriptionEngine -> RawTranscript immuable ----------------------+
 - Les segments et leur texte sont copiés dans une structure possédée avant de libérer l'état natif. Leur ordre et leurs octets UTF-8 ne sont pas corrigés sémantiquement.
 - `raw_text` est la concaténation ordonnée exacte des textes de segments du moteur. Une suppression d'espace, une correction de ponctuation ou une conversion de nombre appartient à une étape distincte.
 - Une sortie UTF-8 invalide est une erreur d'adaptateur; elle ne doit pas être remplacée silencieusement par `U+FFFD`.
-- Une sortie partielle native pendant un décodage annulé reste un diagnostic interne et n'est jamais publiée comme résultat final ni mélangée à un retry CPU. Le `RawTranscript` atomique n'est publié qu'après succès complet et tant que son `Epoch` est encore courant.
+- Une sortie partielle native pendant un décodage annulé reste un diagnostic interne et n'est jamais publiée comme résultat final ni réutilisée par un fallback CPU. Le `RawTranscript` atomique n'est publié qu'après succès complet et tant que son `Epoch` est encore courant.
 - Les métadonnées de résultat suivent une allowlist technique et ne contiennent aucun extrait. Audio et brut restent volatils: l'audio est purgé en fin/cancel/erreur, le brut après remise ou récupération; aucun historique ASR n'est créé.
 
 ### 2.2 Normalisation déterministe
@@ -201,7 +201,7 @@ Le spike emploie deux niveaux de preuve, sans transformer le premier prototype e
 - `WhisperCppEngine` implémente le `TranscriptionEngine` architectural.
 - Les types upstream restent dans un module privé; le reste du workspace ne dépend que des types de domaine.
 - L'adaptateur reçoit du PCM en mémoire; aucun WAV temporaire et aucun sidecar HTTP.
-- Un worker possédant le contexte sérialise les appels. Le MVP accepte un seul segment en vol; une nouvelle soumission concurrente reçoit `Busy`, sans file cachée ni spool. L'état natif n'est jamais utilisé concurremment.
+- Un worker possédant le contexte sérialise les appels. Le MVP accepte un seul segment en vol; une nouvelle soumission concurrente reçoit `CONTRACT_BUSY`, sans file cachée ni spool. L'état natif n'est jamais utilisé concurremment.
 - Le callback d'abandon lit uniquement un drapeau atomique; aucun log, allocation, I/O ou verrou bloquant dans le callback.
 - Le mécanisme de bindings n'est choisi qu'après revue de licence, provenance, maintenance, surface `unsafe` et correspondance exacte avec v1.9.2.
 
@@ -219,11 +219,13 @@ Le choix provisoire est donc: **baseline native puis adaptateur étroit derrièr
 
 ### 6.1 Phases réseau séparées
 
-1. `ACQUIRE-ONLINE`: acquisition volontaire des sources, modèles et corpus dans un cache externe, avec licence et digests.
+1. `ACQUIRE-ONLINE`: acquisition volontaire par l'opérateur du spike, depuis un manifeste manuel approuvé, dans un cache externe.
 2. `BUILD-OFFLINE`: build depuis ce cache avec réseau bloqué.
-3. `RUN-OFFLINE`: toutes les campagnes, fault injections et retries avec réseau bloqué.
+3. `RUN-OFFLINE`: toutes les campagnes, fault injections et nouvelles sessions explicites avec réseau bloqué.
 
-Un résultat qui télécharge implicitement au build ou au premier lancement est invalide. Aucun token Hugging Face n'est nécessaire pour les artefacts publics; un harnais qui en demande un est rejeté.
+M-02 autorise cette acquisition manuelle **pour le spike seulement**. Le manifeste épingle pour chaque artefact: identifiant logique, URL HTTPS immuable, dépôt et révision complète, nom, taille exacte, SHA-256, type/format attendu, licence, notice, date d'accès et statut de révocation local. Son auteur ne peut pas compter comme reviewer. Avant toute acquisition, deux reviewers indépendants l'un de l'autre et de l'auteur doivent chacun vérifier la source primaire, révision, taille/digest, licence et type, puis enregistrer séparément identité, date, verdict et commit du manifeste. Un désaccord ou un champ absent bloque l'acquisition.
+
+Le produit n'expose ni auto-download, ni URL libre, ni tâche de fond, ni téléchargement au build/premier lancement. Un résultat qui télécharge implicitement hors `ACQUIRE-ONLINE` est invalide. Aucun token Hugging Face n'est nécessaire pour les artefacts publics; un harnais qui en demande un est rejeté. L'exception manuelle ne peut pas être promue: un catalogue signé, une trust root embarquée/revue, la révocation, le rollback et leur ADR restent un gate produit explicite.
 
 ### 6.2 Préflight obligatoire
 
@@ -235,6 +237,7 @@ Le futur `fluent-asr-spike preflight` échoue si un champ manque:
 - compilateur C/C++, CMake, Rust et linker;
 - moteur commit/tree, options CMake, état dirty;
 - modèle URL/révision/taille/SHA-256/licence;
+- deux approbations indépendantes du manifeste manuel, distinctes de son auteur;
 - fixture/corpus URL/révision/taille/SHA-256/licence;
 - accélérateur, runtime, pilote et capacité détectée;
 - horloge monotone vérifiée;
@@ -243,9 +246,10 @@ Le futur `fluent-asr-spike preflight` échoue si un champ manque:
 
 ### 6.3 Commandes d'acquisition de référence
 
-Ces commandes sont exécutées uniquement au prochain cycle et dans un répertoire de staging explicite, jamais pendant `cargo build`:
+Ces commandes sont exécutées uniquement au prochain cycle, après double revue du manifeste, par une action explicite de l'opérateur et dans un répertoire de staging hors dépôt. Elles ne sont jamais appelées par le produit ou pendant `cargo build`:
 
 ```powershell
+# Valeurs recopiées du manifeste manuel doublement approuvé.
 $EngineCommit = '306c88f4d1286aec1bf96e544632897886af5501'
 $ModelRevision = '5359861c739e955e79d9a303bcbc70fb988958b1'
 
@@ -262,9 +266,27 @@ Get-Item -LiteralPath <model-staging>.part | Select-Object -ExpandProperty Lengt
 Get-FileHash -Algorithm SHA256 -LiteralPath <model-staging>.part
 ```
 
-Le harnais compare taille et digest à la table avant renommage atomique. Une erreur déplace l'artefact en quarantaine bornée pour diagnostic; il n'est ni chargé ni automatiquement promu. Les quatre modèles suivent la même procédure.
+La reprise n'est admise que si le `.part` appartient au même identifiant de manifeste, si sa taille ne dépasse pas la taille attendue et si la réponse distante confirme l'offset; sinon le partiel est invalidé. Le gestionnaire borne l'écriture à la taille attendue plus un octet témoin, puis vérifie dans cet ordre taille, SHA-256 et type/format allowlist avant renommage atomique sur le même volume. Un fichier final n'est jamais visible avant ces trois validations. Les quatre modèles suivent la même procédure.
 
-### 6.4 Build minimal
+### 6.4 Quarantaine bornée M-02
+
+La quarantaine du spike est un namespace géré hors dépôt et distinct du cache admis. Ses bornes fixes sont:
+
+| Borne | Valeur spike | Comportement |
+|---|---:|---|
+| quota total | `2147483648` octets (2 Gio) | somme des tailles allouées de toutes les entrées et `.part` gérés |
+| nombre maximal | `8` entrées | une source et ses métadonnées constituent une entrée |
+| TTL | `24 h` après mise en quarantaine | expiration calculée depuis un timestamp enregistré; aucun renouvellement à la lecture |
+| taille par entrée | `expected_size + 1` octet au maximum | l'octet témoin détecte un flux trop long puis arrête l'écriture |
+| réserve disque | `remaining_download_bytes + 1 Gio` libres | contrôlée avant acquisition/reprise et avant déplacement en quarantaine |
+
+Avant et après chaque acquisition, reprise, fault injection et cleanup, le harnais écrit un inventaire C1 borné: ID de manifeste, état (`staging`, `quarantined`, `admitted`, `cleanup_pending` ou `removed`), taille, digest si calculé, type détecté, raison canonique, création/expiration et compteurs globaux. Aucun chemin absolu ou contenu n'y figure. Les inventaires avant/après et leur SHA-256 appartiennent aux artefacts de campagne.
+
+Le cleanup est idempotent et possède deux portées explicites: `expired` supprime les entrées dont le TTL est dépassé; `campaign(ids)` supprime seulement les IDs enregistrés par la campagne courante après capture de l'inventaire final. Il ne visite que le namespace exact, ne suit aucun lien/reparse point et traite une entrée déjà absente comme supprimée. `expired` s'exécute au préflight; `campaign(ids)` après chaque scénario de test et au teardown. Aucun mode n'évince silencieusement une entrée non expirée d'une autre campagne pour faire de la place.
+
+Si nombre, quota ou réserve disque serait dépassé, l'acquisition ne démarre pas et rend `ASR_RESOURCE_EXHAUSTED`. Si le disque se remplit pendant l'écriture, le handle est fermé, aucun renommage final n'a lieu, le `.part` courant est supprimé idempotemment si possible et le même code est rendu. Une suppression impossible laisse l'ID en `cleanup_pending` et bloque toute nouvelle acquisition. Si l'artefact fautif ne peut pas entrer en quarantaine après cleanup des expirés, il est supprimé et seul un constat métadonnées `not_quarantined_due_to_quota` est conservé. Un prochain essai reste bloqué jusqu'à ce que inventaire, cleanup, quota et réserve disque repassent; ce n'est jamais un retry du même audio.
+
+### 6.5 Build minimal
 
 Profil CPU de référence, à adapter seulement par un manifeste de build versionné:
 
@@ -289,7 +311,7 @@ cmake --build <build-cpu> --config Release --parallel
 
 Chaque accélération part de ce profil et n'active qu'un backend supplémentaire. `WHISPER_CURL=OFF`, `GGML_RPC=OFF` et le serveur désactivé restent invariants.
 
-### 6.5 Matrice matérielle et accélérations
+### 6.6 Matrice matérielle et accélérations
 
 | Matériel | CPU obligatoire | Accélération candidate | Condition | Fallback |
 |---|---|---|---|---|
@@ -298,7 +320,7 @@ Chaque accélération part de ce profil et n'active qu'un backend supplémentair
 | `HW-WIN` i5-1240P 16 Gio | x86 CPU | OpenVINO ou Vulkan exploratoire, un à la fois | runtime/driver/licence et artefact encodeur vérifiés | même modèle sur CPU |
 | plancher D-06 réel, 4 cœurs/8 Gio | CPU | aucune exigée | machine physique identifiée; simulation mémoire non qualifiante | CPU est le profil de support |
 
-CUDA/ROCm ne sont testés que si une machine déclarée existe; un GPU dédié ne devient jamais une précondition MVP. L'échec d'initialisation d'une accélération donne un diagnostic et un unique retry CPU local. Un échec pendant le décodage abandonne les sorties partielles, puis peut retenter une fois sur le même PCM si la session n'est pas annulée. Aucun changement silencieux de modèle, de langue ou de fournisseur.
+CUDA/ROCm ne sont testés que si une machine déclarée existe; un GPU dédié ne devient jamais une précondition MVP. Si l'accélération est indisponible à la préparation, la session termine avec `ASR_BACKEND_UNAVAILABLE`; après cleanup, une **nouvelle session explicite** peut sélectionner le profil CPU. Si elle échoue pendant le décodage, l'audio et les sorties partielles sont purgés: aucun retry ni fallback ne réutilise ce PCM. Aucun changement silencieux de backend, modèle, langue ou fournisseur n'a lieu dans une session.
 
 ## 7. Paramètres de référence et normalisation `eval-fr-v1`
 
@@ -369,7 +391,7 @@ Ces commandes sont un contrat cible, pas des commandes disponibles aujourd'hui. 
 | Mesure | Début | Fin | Inclusion/exclusion |
 |---|---|---|---|
 | RTF steady-state | entrée du PCM finalisé dans le worker | transcription native complète copiée | `decode wall / audio seconds`; modèle préchargé; conversion, VAD, injection, réécriture exclus |
-| fin de parole -> brut | `t_capture_closed`, après dernier échantillon accepté | `RawTranscript` possédé et récupérable | inclut conversion/copie de handoff et dispatch worker d'un appel accepté; VAD/flush avant le début, refus `Busy`, injection et réécriture rapportés séparément |
+| fin de parole -> brut | `t_capture_closed`, après dernier échantillon accepté | `RawTranscript` possédé et récupérable | inclut conversion/copie de handoff et dispatch worker d'un appel accepté; VAD/flush avant le début, refus `CONTRACT_BUSY`, injection et réécriture rapportés séparément |
 | VAD exploratoire | fin du silence configuré | segment final remis à ASR | rapport séparé avec fenêtre de silence; hors MVP |
 | chargement modèle | début de vérification/initialisation | worker `ready` | publier `integrity_ms` et `native_init_ms` séparément |
 | démarrage froid | processus lancé, cache froid selon protocole | worker ASR prêt | 30 essais; protocole de froid et incertitude publiés |
@@ -416,20 +438,25 @@ Seuls les textes des fixtures publiques correctement licenciées vont dans `tran
 
 ### 9.1 Taxonomie observable
 
-Le contrat architectural doit pouvoir distinguer, sans texte libre upstream:
+Le harnais utilise exclusivement la projection B-01 de `TranscriptionEngine`, vérifiée au commit architecture `3f3a6d2`. Il ne déclare aucun enum, alias ou quadruplet local. `domain=Transcription` pour les onze lignes:
 
-- modèle absent, digest invalide, format/version incompatible, taille dépassée, accès refusé;
-- chargement ou allocation échoué;
-- audio vide, non fini, format/durée invalide;
-- langue ou option non supportée;
-- accélération indisponible et fallback CPU échoué;
-- moteur occupé (`Busy`), sans mise en file ni copie supplémentaire;
-- annulation avant remise du lease, pendant chargement ou pendant decode;
-- timeout;
-- erreur native/panic isolée;
-- résultat UTF-8 invalide ou sortie vide inattendue.
+| Faute/oracle du harnais | code exact | retryable | recoverability | Transition et cleanup |
+|---|---|---:|---|---|
+| modèle géré absent au préflight/prepare ou impossible à ouvrir/lire au chemin géré | `ASR_MODEL_MISSING` | true | `RetrySession` | `Error`; aucune acquisition implicite; nouvelle session après acquisition volontaire et cleanup |
+| taille, SHA-256, type/magic/format, signature ou statut de révocation non conforme; contenu tronqué/appendu | `ASR_MODEL_INVALID` | true | `RetrySession` | rejet avant chargement si possible; `Error`, quarantaine M-02 puis nouvelle session |
+| artefact structurellement valide mais architecture/version incompatible avec le backend, build ou ABI épinglé | `ASR_MODEL_INCOMPATIBLE` | true | `RetrySession` | `Error`; remplacer profil/modèle seulement dans une nouvelle session |
+| langue ou mode demandé non annoncé par `capabilities` | `ASR_UNSUPPORTED_LANGUAGE` | true | `RetrySession` | `Error`; nouvelle configuration dans une nouvelle session |
+| lease non final/continu, encodage/rate/canaux/layout/endian non supporté, NaN/Inf, amplitude ou durée hors contrat | `ASR_UNSUPPORTED_AUDIO_FORMAT` | false | `None` | `Error`; corriger la frontière audio, aucune reprise automatique |
+| échec natif pendant decode, sortie UTF-8 invalide, panic isolée de l'appel ou résultat interne incohérent | `ASR_DECODE_FAILED` | true | `RetrySession` | `Error`; audio et partiels purgés, aucune nouvelle tentative sur ce PCM |
+| lease valide silencieux ou sortie finale vide/non exploitable | `ASR_NO_SPEECH` | true | `RetrySession` | `Error`; audio purgé, nouvelle capture/session seulement |
+| allocation/RAM insuffisante, quota M-02 atteint, disque plein ou modèle valide impossible à charger faute de ressource | `ASR_RESOURCE_EXHAUSTED` | true | `RetrySession` | `Error`; cleanup/quarantaine, aucune réutilisation du segment |
+| backend/runtime/driver/device indisponible, initialisation échouée, worker fermé ou backend crashé | `ASR_BACKEND_UNAVAILABLE` | true | `RetrySession` | `Error`; profil CPU possible dans une nouvelle session explicite seulement |
+| deadline monotone de transcription dépassée | `ASR_TIMEOUT` | true | `RetrySession` | `Error`; Epoch avancé, résultat tardif détruit, audio purgé |
+| `CancelToken` observé avant ou pendant transcription | `ASR_CANCELLED` | false | `None` | transition `Cancelled`, **jamais `Error`**; résultat tardif et C3 détruits |
 
-La taxonomie de domaine provisoire est `NotReady`, `ModelMissingOrInvalid`, `UnsupportedFormat`, `ResourceExhausted`, `DecodeFailed`, `Cancelled`, `Timeout` ou `Internal`; `Busy` est le refus de concurrence. Les cas détaillés ci-dessus s'y mappent sans exposer la cause native. Chaque erreur possède code stable, phase, réessayabilité et `messageKey` expurgé. Les logs ne contiennent ni chemin absolu, ni texte, ni audio, ni message natif non filtré.
+`retryable=true` indique seulement qu'une future action gardée peut réussir. Pour tous les codes ASR retryables, `RetrySession` impose cleanup complet, purge de tout C3, puis nouveaux `SessionId`/`Epoch`: aucun `RetryOperation`, retry automatique, fallback ou second moteur ne réutilise le même audio. Les dix codes autres que `ASR_CANCELLED` mènent à `Error` et détruisent le segment courant s'il existe; aucune `Error` ASR ne conserve de C3. `ASR_UNSUPPORTED_AUDIO_FORMAT` interdit en plus toute reprise automatique. Chaque erreur garde `messageKey` et `safeDetails` allowlist expurgés; les logs ne contiennent ni chemin absolu, texte, audio ou cause native libre.
+
+La saturation concurrente n'est pas une faute ASR: avant tout effet et avant consommation de son lease, le second appel reçoit le code canonique `CONTRACT_BUSY` (`domain=Contract`, `retryable=true`, `recoverability=RetryOperation`) et l'état de session reste inchangé. Cette recoverability autorise seulement une nouvelle intention d'admission après libération; elle n'autorise pas un RetryOperation ASR sur un segment déjà accepté. Un défaut du harnais lui-même ou un échec d'oracle invalide la campagne; il ne doit jamais être maquillé en nouveau code ASR.
 
 ### 9.2 Annulation
 
@@ -437,19 +464,19 @@ Scénarios obligatoires, 30 répétitions chacun:
 
 1. annulation avant remise du lease;
 2. annulation juste après remise du lease;
-3. annulation pendant vérification du modèle;
-4. annulation pendant encoder;
-5. annulation pendant decoder;
-6. annulation simultanée à la fin de decode;
-7. annulation pendant fallback accélération -> CPU.
+3. annulation pendant encoder;
+4. annulation pendant decoder;
+5. annulation simultanée à la fin de decode;
+6. annulation pendant decode accéléré;
+7. backend non coopératif qui complète après changement d'epoch.
 
-L'annulation est idempotente. Le callback natif ne fait qu'un load atomique du `CancelToken`. Le worker rend `Cancelled`, purge l'audio et redevient utilisable pour le job suivant. Indépendamment de la capacité du backend à s'interrompre, le core invalide par `Epoch` toute complétion tardive: aucun succès tardif n'est observable. La latence d'annulation reste une mesure candidate tant que le callback et les backends n'ont pas été caractérisés.
+L'annulation est idempotente. Le callback natif ne fait qu'un load atomique du `CancelToken`. Le worker rend `ASR_CANCELLED`, le core transite vers `Cancelled` sans créer d'`Error`, purge l'audio et redevient utilisable après `CleanupComplete`. Indépendamment de la capacité du backend à s'interrompre, le core invalide par `Epoch` toute complétion tardive: aucun succès tardif n'est observable. La latence d'annulation reste une mesure candidate tant que le callback et les backends n'ont pas été caractérisés.
 
 ### 9.3 Backpressure et concurrence
 
 Configuration alignée sur le contrat provisoire: un seul segment en vol, capacité logique `Q-ASR=1`, sans slot d'attente et sans spool. Toute soumission concurrente:
 
-- retourne immédiatement `Busy`;
+- retourne immédiatement `CONTRACT_BUSY`;
 - ne copie pas l'audio;
 - n'écrase ni ne laisse tomber un job silencieusement;
 - ne crée pas de file, thread ou contexte supplémentaire;
@@ -458,10 +485,10 @@ Configuration alignée sur le contrat provisoire: un seul segment en vol, capaci
 Campagnes:
 
 - burst de 10 jobs sur fixture;
-- producteur plus rapide que le decode pendant 5 minutes, avec tous les refus `Busy` comptés;
+- producteur plus rapide que le decode pendant 5 minutes, avec tous les refus `CONTRACT_BUSY` comptés;
 - alternance cancel/submit sur 1000 opérations;
-- deux appels concurrents visant le même contexte: exactement un est accepté et l'autre reçoit `Busy` avant l'API native;
-- récupération après erreur de modèle et après fallback CPU.
+- deux appels concurrents visant le même contexte: exactement un est accepté et l'autre reçoit `CONTRACT_BUSY` avant l'API native;
+- après `ASR_BACKEND_UNAVAILABLE`, cleanup puis nouvelle session CPU avec une nouvelle capture/fixture, jamais le même lease.
 
 Oracles: mémoire bornée, refus immédiat et déterministe tant que le moteur est occupé, aucune duplication, aucun deadlock, aucun succès après cancel ou changement d'epoch, contexte sain pour le job suivant.
 
@@ -469,29 +496,32 @@ Oracles: mémoire bornée, refus immédiat et déterministe tant que le moteur e
 
 ### 10.1 Modèles et fichiers
 
-Produire uniquement dans un répertoire temporaire borné des copies de test:
+Produire uniquement dans le namespace temporaire borné des copies synthétiques ou dérivées du modèle public approuvé. Chaque scénario capture inventaires M-02 avant/après, code canonique, cleanup et vérification que le fichier final n'est jamais promu à tort:
 
-- fichier absent;
-- digest faux par flip d'un octet;
-- troncature à 0 %, 1 %, 50 % et taille-1;
-- append jusqu'à dépasser la taille allowlist;
-- magic/version incompatibles;
-- fichier illisible;
-- `.part` interrompu puis reprise;
-- espace libre insuffisant simulé par le gestionnaire;
-- renommage atomique échoué;
-- modèle révoqué dans un manifeste local.
+| Scénario | Oracle canonique |
+|---|---|
+| fichier final absent ou illisible; renommage atomique échoué hors disque plein | `ASR_MODEL_MISSING`, true, `RetrySession` si la préparation est demandée |
+| digest faux par flip d'un octet; troncature 0 %, 1 %, 50 % et taille-1; append; taille ou type/magic invalide; manifeste local révoqué | `ASR_MODEL_INVALID`, true, `RetrySession`; rejet avant chargement et entrée en quarantaine si les bornes le permettent |
+| modèle au digest/type approuvé mais version, architecture ou backend incompatibles | `ASR_MODEL_INCOMPATIBLE`, true, `RetrySession` |
+| `.part` interrompu puis repris avec même manifeste et offset valide | succès d'acquisition après vérification complète; aucun code d'erreur; inventaire `staging -> admitted` |
+| `.part` repris avec mauvais manifeste, offset, réponse Range ou taille | partiel invalidé; le modèle demeure absent, donc `ASR_MODEL_MISSING` à la préparation; inventaire `staging -> quarantined/removed` |
+| quota, nombre maximal, réserve ou espace libre insuffisant avant/pendant l'écriture | `ASR_RESOURCE_EXHAUSTED`, true, `RetrySession`; aucun final, cleanup idempotent, inventaire borné |
+| expiration TTL, cleanup répété, entrée déjà absente, quota plein avec entrées non expirées | état identique après deux cleanups; aucune éviction non expirée; `ASR_RESOURCE_EXHAUSTED` si l'admission reste impossible |
 
-Aucune copie corrompue n'est transmise au parseur avant validation de taille/digest. Pour les formats malformes au bon digest, utiliser uniquement un artefact synthétique allowlisté et exécuter le parseur dans le périmètre d'isolation décidé avec Security.
+La suite exécute explicitement limite-1/limite/limite+1 pour taille, quota et nombre, simule l'interruption à 0 %, 1 %, 50 % et taille-1, reprend deux fois, refuse un espace libre insuffisant avant ouverture, injecte `disk full` pendant l'écriture tout en gardant le canal d'inventaire de test disponible, puis compare les inventaires avant/après et après second cleanup. Aucune copie corrompue n'est transmise au parseur natif avant validation taille/digest. Pour un type malformé au digest délibérément allowlisté, utiliser uniquement un artefact synthétique et exécuter la détection de type dans le périmètre d'isolation décidé avec Security.
 
 ### 10.2 Audio et runtime
 
-- zéro échantillon, silence, NaN/Inf, amplitude hors plage, durée limite et dépassement;
-- allocation refusée/pression mémoire;
-- accélérateur absent, device perdu et init échouée;
-- fermeture du worker et relance;
-- callback d'annulation très fréquent;
-- log upstream contenant un canari synthétique, qui doit être supprimé avant le sink.
+- zéro échantillon, lease non final ou discontinu, NaN/Inf, amplitude et durée hors contrat -> `ASR_UNSUPPORTED_AUDIO_FORMAT`, false, `None`;
+- silence valide -> `ASR_NO_SPEECH`, true, `RetrySession`;
+- erreur native/UTF-8 invalide -> `ASR_DECODE_FAILED`, true, `RetrySession`;
+- allocation refusée ou pression mémoire -> `ASR_RESOURCE_EXHAUSTED`, true, `RetrySession`;
+- accélérateur/runtime/device absent, init échouée ou worker fermé -> `ASR_BACKEND_UNAVAILABLE`, true, `RetrySession`;
+- deadline dépassée et complétion tardive -> `ASR_TIMEOUT`, true, `RetrySession`, résultat détruit;
+- callback d'annulation très fréquent -> `ASR_CANCELLED`, false, `None`, transition `Cancelled` sans `Error`;
+- log upstream contenant un canari synthétique -> campagne invalide; aucun alias ASR inventé, canari absent du sink exigé.
+
+Chaque scénario `Error` vérifie que le segment courant et tous les partiels sont purgés. Chaque scénario `RetrySession` vérifie qu'une nouvelle tentative exige de nouveaux `SessionId`/`Epoch` et une nouvelle capture/fixture: il n'existe aucun `RetryOperation` ASR sur le même audio.
 
 ### 10.3 Preuve zéro egress
 
@@ -500,7 +530,7 @@ La preuve combine:
 1. build avec `WHISPER_CURL=OFF`, `GGML_RPC=OFF`, serveur et backend dynamique désactivés;
 2. source et dépendances acquises avant le test;
 3. réseau OS désactivé ou namespace/firewall bloquant documenté;
-4. capture réseau par processus/interface pendant préflight, chargement, 30 transcriptions, erreurs et retry;
+4. capture réseau par processus/interface pendant préflight, chargement, 30 transcriptions, erreurs et nouvelles sessions explicites;
 5. test canari vérifiant l'absence d'audio, texte et modèle dans les logs;
 6. succès complet sans compte, token, DNS ni endpoint accessible.
 
@@ -528,6 +558,7 @@ Un profil peut être recommandé au manager seulement si:
 
 - moteur, wrapper, modèle, corpus et accélérateur ont licence/provenance/SBOM sans inconnu bloquant;
 - toutes les tailles/digests correspondent et l'acquisition/reprise/atomicité sont prouvées;
+- le manifeste manuel du spike porte deux revues indépendantes et les tests quota/nombre/TTL/disque/inventaire/cleanup M-02 passent;
 - CPU fonctionne sur la référence et sur le plancher réel identifié; l'accélération reste facultative;
 - zéro egress, aucune persistance audio utilisateur et logs minimisés sont prouvés;
 - raw text, normalisation et réécriture sont séparés; le fallback brut exact passe;
@@ -535,6 +566,8 @@ Un profil peut être recommandé au manager seulement si:
 - campagnes dev complètes et test final aveugle sont recalculables;
 - RTF/WER/CER/latence/RSS/CPU/démarrage sont publiés avec percentiles et IC applicables;
 - l'écart aux cibles candidates est soumis explicitement à validation, pas masqué.
+
+Ces conditions ne promeuvent pas le mécanisme d'acquisition M-02 dans le produit. Avant toute distribution ou auto-acquisition produit, un ADR doit approuver catalogue signé, trust root, rotation/révocation, rollback et comportement offline; l'absence d'une seule de ces preuves bloque la promotion.
 
 Si plusieurs profils remplissent ces invariants, retenir le front de Pareto exactitude/latence/RAM/disque. À exactitude admissible comparable, préférer le profil le plus petit et le CPU le plus prévisible. Une accélération ne change pas le modèle par défaut sans mesure du fallback CPU.
 
@@ -544,10 +577,12 @@ Rejeter le profil, sans l'optimiser silencieusement, si:
 
 - licence ou droit de redistribution reste inconnu/incompatible;
 - source/révision/digest n'est pas vérifiable;
+- manifeste manuel sans deux revues indépendantes, quarantaine non bornée ou acquisition M-02 réutilisée comme auto-download produit;
 - moteur ou build exige le réseau à runtime;
 - un modèle corrompu est chargé, un egress est tenté ou du contenu apparaît dans les logs;
 - le chemin CPU n'existe pas sur le matériel minimal;
 - annulation/backpressure produit fuite, deadlock, usage non borné ou succès tardif;
+- un code ASR dévie du quadruplet B-01, `ASR_CANCELLED` entre en `Error`, ou un même audio est retenté après une `Error`;
 - texte brut disponible est perdu, modifié par normalisation/réécriture ou remplacé lors d'un fallback;
 - les artefacts ne permettent pas de recalculer les résultats;
 - le binding exige une exception `unsafe` non approuvée ou expose l'ABI upstream au domaine.
@@ -593,7 +628,7 @@ Le spike est incomplet si un seul chiffre est publié sans commande, environneme
 | ASR-O4 | accélération par OS | gain, démarrage, stabilité, licence/runtime et fallback CPU | platform + ai-asr + security |
 | ASR-O5 | approbation des seuils candidats | baseline sur matériel déclaré et impact produit | project-manager + utilisateur si D-06 change |
 | ASR-O6 | corpus MVP spontané/métier/code-switching | licence, consentement, représentativité et splits | product + ai-asr + security |
-| ASR-O7 | signature/catalogue/révocation des modèles | design gestionnaire et clés, hors spike minimal | product-architect + security |
+| ASR-O7 | catalogue signé, trust root, rotation/révocation et rollback des modèles | ADR et design gestionnaire/clé avant toute promotion produit; M-02 reste manuel spike-only | product-architect + security |
 
 ## 14. Sources primaires consultées
 
