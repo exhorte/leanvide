@@ -122,7 +122,7 @@ Le harnais produit un `capability.json` sans titre de fenetre, texte dicte, cont
 }
 ```
 
-Les probes precedant toute action sont sans prompt quand l'OS le permet. Un etat inconnu ne devient jamais `true` par defaut. Les reason codes minimaux sont: `api_absent`, `backend_absent`, `permission_denied`, `permission_revoked`, `shortcut_conflict`, `target_missing`, `target_changed`, `target_protected`, `integrity_boundary`, `focus_unverifiable`, `clipboard_busy`, `clipboard_changed`, `injection_rejected`, `oracle_mismatch`, `session_locked`, `timeout`.
+Les probes precedant toute action sont sans prompt quand l'OS le permet. Un etat inconnu ne devient jamais `true` par defaut. Les reason codes minimaux sont: `api_absent`, `backend_absent`, `permission_denied`, `permission_revoked`, `shortcut_conflict`, `target_missing`, `target_changed`, `target_protected`, `integrity_boundary`, `focus_unverifiable`, `clipboard_busy`, `clipboard_changed`, `clipboard_owner_unknown`, `clipboard_sequence_unknown`, `indicator_inaccessible`, `injection_rejected`, `oracle_mismatch`, `session_locked`, `timeout`.
 
 ## 5. Matrice des mecanismes a tester
 
@@ -197,20 +197,121 @@ Tout texte present une fois dans une mauvaise cible est un echec critique de cam
 ## 8. Securite du presse-papiers
 
 1. La fixture utilise uniquement `FLUENT-SPIKE-<run-id>-<counter>`; jamais de contenu utilisateur.
-2. Le spike n'appelle aucune API de lecture de l'ancien clipboard et ne tente pas de le sauvegarder/restaurer.
-3. L'ecriture est une action explicite; l'UI indique `Copie`, puis distingue `Collage confirme`, `Collage non confirme` et `Copie seule`.
-4. La valeur ecrite porte un digest en memoire et, lorsque l'OS l'offre, un numero de sequence/change count. Le digest du contenu n'est jamais journalise.
-5. Le nettoyage automatique n'efface la valeur que si Fluent est encore proprietaire **et** si le numero de sequence/change count est inchange. Sinon il ne touche a rien et emet `clipboard_changed` sans contenu.
-6. Le TTL de nettoyage est un parametre du spike, teste a `0 s`, `30 s` et `120 s`; ce plan ne choisit pas le TTL produit.
-7. Arret normal, annulation, crash simule et redemarrage testent le cleanup best-effort. Aucun processus gardien permanent n'est introduit.
-8. Sous X11/Wayland, la perte d'ownership est un resultat attendu; Fluent ne revendique pas `copied` si la fixture cible ne peut pas obtenir la selection.
-9. Sous Wayland sans clipboard en arriere-plan autorise, l'utilisateur ouvre la surface Fluent, clique `Copier`, puis colle manuellement. Une session Remote Desktop/Input Capture ne peut etre promue que si security-reviewer et produit jugent son scope et son UX proportionnes.
+2. Le spike ne lit, ne persiste, ne sauvegarde et ne restaure jamais l'ancien contenu, y compris pour un cleanup apres crash. Cette interdiction est normative, pas une option de harnais.
+3. L'ecriture vient seulement d'une action utilisateur explicite. Avant l'action `Copier`, un texte accessible annonce: « Le presse-papiers, son historique et sa synchronisation peuvent etre lus par d'autres applications ou appareils; ne l'utilisez pas pour un secret. »
+4. L'UI distingue `ClipboardPrepared` (L1), `ConfirmedExact` (L2/L3), `Unconfirmed`/`OutcomeUnknown` et `InternalRecovery` (L0). Un succes d'API ne change pas seul le resultat en `ConfirmedExact`.
+5. La valeur synthetique ecrite peut porter un digest uniquement en memoire et, lorsque l'OS l'offre, un numero de sequence/change count. Ni la valeur ni le digest ne sont persistants ou journalises.
+6. Le cleanup represente l'observation d'ownership/sequence par un etat a trois valeurs et applique la table normative ci-dessous.
+7. Le TTL de cleanup est un parametre du spike, teste a `0 s`, `30 s` et `120 s`; ce plan ne choisit pas le TTL produit.
+8. Arret normal, annulation, crash simule et redemarrage testent le cleanup best-effort. Aucun processus gardien permanent n'est introduit.
+9. Sous X11/Wayland, la perte d'ownership est un resultat attendu; Fluent ne revendique pas `ClipboardPrepared` si la fixture cible ne peut pas obtenir la selection.
+10. Sous Wayland sans clipboard en arriere-plan autorise, l'utilisateur ouvre la surface Fluent, active `Copier`, puis colle manuellement. Une session Remote Desktop/Input Capture ne peut etre promue que si security-reviewer et produit jugent son scope et son UX proportionnes.
+
+### 8.1 Etat normatif du cleanup
+
+| Etat observe | Condition minimale | Mutation autorisee | Resultat |
+|---|---|---|---|
+| `MATCHED` | meme instance Fluent encore proprietaire **et** sequence/change count connu et inchange | essai de cleanup autorise seulement dans le spike | resultat enregistre; aucune promesse produit |
+| `CHANGED` | ownership ou sequence/change count a change | **aucune mutation** | `clipboard_changed` |
+| `UNKNOWN` | API absente/erreur, valeur non initialisee, processus mort, crash, redemarrage ou perte du marqueur en memoire | **aucune mutation** | `clipboard_owner_unknown` ou `clipboard_sequence_unknown` |
+
+`MATCHED` est une hypothese de spike a prouver par OS, pas une garantie qu'un cleanup automatique sera retenu dans le produit. `CHANGED` et `UNKNOWN` interdisent tout appel capable d'effacer, remplacer ou reprendre la selection. Apres crash ou redemarrage, l'etat initial est toujours `UNKNOWN`: aucune donnee persistante ne permet de le reclasser.
+
+### 8.2 Course crash/sentinelle obligatoire
+
+Le processus `fluent-clipboard-sentinel` utilise seulement des chaines synthetiques et fournit son propre oracle sans que Fluent lise le clipboard:
+
+1. Fluent publie `FLUENT-SPIKE-...`, puis est tue au point de faute declare;
+2. la sentinelle prend l'ownership et publie `SENTINEL-AFTER-<counter>`;
+3. Fluent redemarre avec ownership/sequence `UNKNOWN`;
+4. le chemin de cleanup s'execute;
+5. la sentinelle verifie qu'elle reste proprietaire, que sa valeur est inchangee et qu'aucune mutation clipboard Fluent n'a ete appelee.
+
+La variante `CHANGED` remplace le clipboard pendant que Fluent reste vivant. `PASS` exige zero effacement/remplacement et `mutation_attempted=false` dans les 30 essais de chaque variante. Une seule mutation quand l'etat est `CHANGED` ou `UNKNOWN` vaut `FAIL` securite.
 
 Le presse-papiers reste observable par d'autres processus et, selon les fonctions OS, peut participer a un historique ou une synchronisation. L'indicateur utilisateur ne le presente jamais comme stockage confidentiel.
 
-## 9. Harnais, commandes et fixtures
+## 9. Oracle accessible bloquant
 
-### 9.1 Commandes contractuelles a implementer au cycle suivant
+L'oracle accessible est une precondition executable des campagnes hotkey et fallback, pas une inspection visuelle a posteriori. Aucune campagne `hotkey` ou `fallback` ne commence sur un couple OS/AT tant que `a11y-preflight` n'a pas prouve les roles, noms, etats, navigation clavier, focus et annonces ci-dessous. Si l'AT ou l'API d'accessibilite manque, le resultat est `UNAVAILABLE_ENVIRONMENT` ou `UNSUPPORTED`; le test n'est pas saute en silence et aucune preuve d'accessibilite n'est revendiquee.
+
+Ce plan specifie le futur oracle, mais ne l'implemente ni ne le declare execute dans `CYCLE-20260809-04`.
+
+### 9.1 Contrat semantique et fail-safe
+
+Le helper frontend expose des identifiants de test stables uniquement a l'oracle; l'utilisateur recoit les noms francais accessibles. Les roles natifs equivalents sont archives par l'adaptateur UI Automation, AX ou AT-SPI.
+
+| Scenario | Nom accessible attendu | Role/etat attendu | Annonce et focus | Comportement sure |
+|---|---|---|---|---|
+| toggle pret | `Demarrer la dictee` | bouton toggle, `pressed=false`, enabled | atteignable par Tab/Shift+Tab; focus visible et programmatique | Espace/Entree demarre seulement si l'indicateur est accessible |
+| capture active | `Arreter la dictee` | bouton toggle, `pressed=true`; statut `Ecoute en cours` | annonce live unique `Ecoute en cours`; focus reste sur le controle | Espace/Entree arrete; Escape annule |
+| conflit hotkey | `Raccourci indisponible` | `alert`; toggle UI enabled | annonce `Raccourci indisponible, utilisez le bouton`; focus reste/revient au controle declencheur | aucune capture globale; toggle clavier seul reste utilisable |
+| permission refusee/revoquee | `Permission clavier refusee` | `alert`; action de diagnostic nommee, toggle adapte | raison et action annoncees, sans boucle de prompt ni focus force | aucune hotkey; controle UI reste disponible s'il passe le preflight |
+| key-up perdu | `Capture arretee` | `alert`; toggle `pressed=false` | annonce `Capture arretee, relachement de touche non recu`; focus stable | watchdog arrete la capture, aucun redemarrage automatique |
+| session verrouillee | `Capture arretee` | statut persistant, toggle `pressed=false` au retour | annonce `Capture arretee, session verrouillee` apres deverrouillage; aucun focus exige pendant le verrouillage | coeur arrete immediatement sans dependre de l'AT |
+| annulation | `Dictee annulee` | `status`; toggle `pressed=false` | annonce unique `Dictee annulee`; focus revient au controle logique | buffers/snapshot nettoyes; aucun collage |
+| fallback copie | `Copier le texte` | bouton enabled; description accessible de risque clipboard | disclosure de section 8 lue avant l'action; annonce `Texte copie, collez-le manuellement` | action explicite seulement; L0 reste disponible |
+| indicateur disparu/inaccessible | aucun noeud statut exploitable ou arbre UI indisponible | `indicator_inaccessible` | l'oracle emet la faute, sans simuler une annonce reussie | refuser l'armement, ou arreter une capture active via watchdog |
+
+Le watchdog d'essai utilise une limite **candidate de 1 000 ms** entre la detection `indicator_inaccessible` et l'etat capture inactive. Cette valeur rend le test executable; elle ne devient un TTL produit qu'apres mesure/revue. Le coeur ne depend pas du lecteur d'ecran pour s'arreter: disparition du noeud, crash UI ou rupture du canal d'etat declenche le meme fail-safe.
+
+### 9.2 Navigation et annonces a exercer
+
+- lancer le parcours depuis le clavier uniquement: Tab, Shift+Tab, Espace/Entree et Escape;
+- verifier ordre de focus, focus visible, focus programmatique et absence de piege clavier;
+- ne jamais deplacer le focus vers une live region ou une alerte non interactive;
+- verifier chaque changement via evenement d'accessibilite machine-readable, puis par le lecteur d'ecran nomme;
+- refuser les etats contradictoires (`pressed=true` avec `Capture arretee`) et les annonces dupliquees;
+- limiter l'arbre et les traces au helper Fluent et aux chaines synthetiques; ne pas inspecter l'arbre de l'application cible ni son texte;
+- apres verrouillage, verifier l'arret par l'etat du coeur puis l'annonce au retour, sans attendre que l'AT fonctionne sur l'ecran verrouille.
+
+### 9.3 Matrice OS/technologie d'assistance
+
+| Environnement | AT utilisateur nommee | Oracle programme candidat | Disponibilite actuelle | Preuve requise |
+|---|---|---|---|---|
+| `HW-WIN` / `HW-WIN-ALT-01` | Narrateur Windows | arbre/evenements UI Automation | hote alternatif disponible; AT/preflight `NOT_RUN` | run-id Windows + version/build + version Narrateur |
+| `HW-MAC` | VoiceOver | arbre/evenements AX; Accessibility Inspector comme diagnostic | `UNAVAILABLE_ENVIRONMENT` ici | run-id macOS + build + VoiceOver, machine Apple Silicon |
+| `HW-LNX-X11` GNOME | Orca | arbre/evenements AT-SPI2 | `UNAVAILABLE_ENVIRONMENT` | run-id X11 + GNOME/Orca/AT-SPI2 versions |
+| `HW-LNX-WAY-GNOME` | Orca | AT-SPI2 de la surface Fluent | `UNAVAILABLE_ENVIRONMENT` | run-id Mutter/backend portal + versions AT |
+| `HW-LNX-WAY-KDE` | Orca | AT-SPI2 de la surface Fluent | `UNAVAILABLE_ENVIRONMENT` | run-id KWin/backend portal + versions AT |
+| `HW-LNX-WAY-WLR` | Orca si disponible | AT-SPI2 de la surface Fluent, a prober | `UNAVAILABLE_ENVIRONMENT` | support ou absence archivee par compositor |
+
+La presence nominale d'un lecteur d'ecran ne prouve pas la chaine WebView/accessibilite. Chaque ligne reste `HYPOTHESIS` jusqu'au preflight reel sur la surface du build teste.
+
+### 9.4 Responsabilites du cycle executable
+
+| Responsable | Livrable futur borne | Interdiction |
+|---|---|---|
+| `frontend-lead` | helper/surface semantique: controles, live regions, noms/roles/etats, ordre clavier, focus visible et fault switch `indicator_inaccessible` | ne choisit pas API hotkey, timeout natif ou resultat de remise |
+| `platform-lead` | stimuli hotkey/permission/lock/key-up, pont d'etat et watchdog sans contenu cible | ne definit pas les semantiques frontend, ne remplace pas l'oracle QA et ne promet pas la parite OS |
+| `qa-release-lead` | commande `fluent-a11y-oracle`, adaptateurs d'observation UIA/AX/AT-SPI, executions AT, artefacts et verdict PASS/FAIL | ne waive pas un AT/materiel absent comme PASS |
+| `security-reviewer` | revue fail-safe, expurgation et absence de contenu cible/clipboard dans les preuves | aucune implementation produit par defaut |
+
+Le manager attribue les fichiers disjoints avant ce cycle executable. Le present document n'autorise aucun changement frontend, QA, runtime, dependance ou permission.
+
+### 9.5 Artefacts et verdict
+
+Avant hotkey/fallback, la commande future est:
+
+```powershell
+fluent-a11y-oracle preflight --platform <windows|macos|x11|wayland> --at <narrator|voiceover|orca> --scenarios ready,active,conflict,permission-denied,key-up-lost,locked,cancelled,fallback,indicator-lost --output artifacts/quality/<run-id>
+```
+
+Elle ajoute `accessibility.json`, `a11y-tree.json`, `keyboard.ndjson`, `announcements.ndjson`, `focus.ndjson` et `watchdog.json`. Les arbres sont limites aux IDs/roles/etats et chaines synthetiques Fluent; les noms de compte, titres/fenetres externes, texte dicte et contenu clipboard sont interdits. Les sorties AT manuelles sont une checklist horodatee sans enregistrement de session utilisateur.
+
+Campagne minimale: 3 chauffes + 30 repetitions par scenario, sauf verrouillage 10 cycles; 30 fautes `indicator_inaccessible`. `PASS` exige:
+
+- noms, roles et etats exacts dans 100 % des essais;
+- parcours complet clavier seul, ordre/focus correct et annonce non seulement visuelle;
+- zero capture sur conflit/refus et zero capture residuelle apres key-up perdu, lock ou annulation;
+- 30/30 arrets watchdog en <= 1 000 ms et `pressed=false` final;
+- zero contenu non synthetique dans les artefacts.
+
+Une annonce absente, un focus perdu/piege, une capture active alors que l'indicateur est inaccessible, un role/etat faux ou un seul depassement watchdog vaut `FAIL` pour le couple OS/AT. Un environnement manquant reste `UNAVAILABLE_ENVIRONMENT`, jamais preuve realisee.
+
+## 10. Harnais, commandes et fixtures
+
+### 10.1 Commandes contractuelles a implementer au cycle suivant
 
 Ces commandes n'existent pas dans le cycle actuel:
 
@@ -221,7 +322,7 @@ fluent-platform-spike hotkey --mode ptt --runs 1000 --output artifacts/quality/<
 fluent-platform-spike target --scenario stable,target-switch,target-destroyed,protected --runs 100 --output artifacts/quality/<run-id>
 fluent-platform-spike deliver --level l2 --fixture tests/fixtures/platform/targets.json --runs 100 --output artifacts/quality/<run-id>
 fluent-platform-spike fallback --level l1-l0 --runs 100 --output artifacts/quality/<run-id>
-fluent-platform-spike cleanup --scenario normal,cancel,crash,restart --output artifacts/quality/<run-id>
+fluent-platform-spike cleanup --scenario normal,cancel,changed,crash-sentinel,restart-unknown --runs 30 --output artifacts/quality/<run-id>
 ```
 
 Sous Linux, le lanceur archive avant essai les sorties expurgees de:
@@ -235,7 +336,7 @@ gdbus introspect --session --dest org.freedesktop.portal.Desktop --object-path /
 
 Les identifiants de session, noms d'utilisateur, variables d'environnement completes et chemins personnels sont filtres. Le harnais n'utilise ni shell privilege, ni `sudo`, ni outil d'automatisation non declare.
 
-### 9.2 Fixtures non sensibles
+### 10.2 Fixtures non sensibles
 
 Le futur `tests/fixtures/platform/targets.json` reference des applications locales et un helper `fluent-target-fixture` possede par QA, avec quatre champs controles:
 
@@ -246,7 +347,9 @@ Le futur `tests/fixtures/platform/targets.json` reference des applications local
 
 Applications de diversite, versions archivees: Notepad/TextEdit/GNOME Text Editor, Edge ou Safari ou Firefox/Chromium, VS Code, plus le helper deterministe. Les tests de terminal n'executent jamais le texte: la chaine commence par `# FLUENT-SPIKE` et le shell de fixture est remplace par un champ inerte.
 
-### 9.3 Artefacts obligatoires
+Le `frontend-lead` livre separement la future surface `fluent-accessibility-fixture` de section 9; QA en observe les roles/etats sans reutiliser `fluent-target-fixture` comme oracle d'accessibilite implicite. Le processus `fluent-clipboard-sentinel` appartient au harnais QA et connait uniquement sa propre chaine synthetique.
+
+### 10.3 Artefacts obligatoires
 
 Chaque commande produit le contrat de `MEASUREMENT-PLAN.md`:
 
@@ -260,6 +363,12 @@ artifacts/quality/<run-id>/
   oracle.json
   permissions.json
   cleanup.json
+  accessibility.json
+  a11y-tree.json
+  keyboard.ndjson
+  announcements.ndjson
+  focus.ndjson
+  watchdog.json
   raw.ndjson
   summary.json
   stdout.txt
@@ -269,11 +378,13 @@ artifacts/quality/<run-id>/
 
 `attempts.ndjson` contient des codes, timestamps monotones, latences et booleens, jamais les textes ou identifiants natifs bruts. `oracle.json` contient la chaine synthetique attendue par hash de fixture, le nombre attendu et le resultat exact/unique. Les captures visuelles eventuelles montrent uniquement les fixtures et sont listees par checksum.
 
-## 10. Campagnes et criteres PASS/FAIL
+## 11. Campagnes et criteres PASS/FAIL
 
-### 10.1 Hotkey
+### 11.1 Hotkey
 
 Matrice minimale: 1 000 cycles down/up, auto-repeat, conflit, key-up perdu, app non focalisee, changement de layout, verrouillage, veille/reprise et arret brutal.
+
+Precondition: le couple OS/AT correspondant a passe la section 9, y compris toggle clavier, conflit/refus, key-up perdu, verrouillage, annulation et watchdog d'indicateur. Sans ce run-id, la campagne ne demarre pas.
 
 `PASS` pour un environnement/mecanisme si:
 
@@ -286,40 +397,41 @@ Matrice minimale: 1 000 cycles down/up, auto-repeat, conflit, key-up perdu, app 
 
 Un evenement manque, une session restee active ou un grab non libere vaut `FAIL`. L'absence du portail Wayland vaut `UNSUPPORTED` si le fallback UI passe, pas un succes hotkey.
 
-### 10.2 Snapshot et revalidation
+### 11.2 Snapshot et revalidation
 
 `PASS` si 100/100 essais par scenario stable remettent a la bonne fixture et si tous les scenarios change/destroyed/protected/elevation refusent L2 sans toucher une autre cible. Un seul faux succes ou texte dans une mauvaise cible vaut `FAIL` critique.
 
 L'absence d'API de cible Wayland donne `UNSUPPORTED` avec L1/L0; elle ne peut pas etre classee `PROVEN` pour L2.
 
-### 10.3 Injection/collage
+### 11.3 Injection/collage
 
 Le budget candidat existant s'applique seulement apres preuve:
 
 - Windows/macOS: >= 98 % de texte exact, unique, bonne cible;
 - X11: >= 95 %;
 - chaque taux publie son IC binomial 95 % et au moins 100 essais par cible/capability;
-- un retour API sans egalite exacte de l'oracle est `unconfirmed`, donc echec du taux d'injection;
+- un retour API sans egalite exacte de l'oracle est `Unconfirmed` ou `OutcomeUnknown`, donc echec du taux d'injection;
 - cible non cooperative, champ protege et frontiere d'integrite doivent echouer explicitement ou passer en fallback, jamais annoncer un faux succes.
 
 Les seuils restent des cibles proposees tant que la Phase 02 ne les a pas approuves avec artefacts.
 
-### 10.4 Fallback
+### 11.4 Fallback
 
 `PASS` si, sur 100 essais par environnement/capability:
 
 - le texte brut reste visible L0 dans 100 % des cas;
-- l'action L1 explicite publie la fixture, l'indicateur est visible et aucun faux `colle` n'est affiche;
+- le preflight accessible de section 9 est `PASS` avant la campagne;
+- l'action L1 explicite publie la fixture apres disclosure accessible, l'annonce n'est pas seulement visuelle et aucun faux `colle` n'est affiche;
 - Wayland atteint la cible candidate >= 99 % de preparation clipboard lorsque la voie est disponible;
 - si la voie clipboard ne l'est pas, L0 reste exploitable et le diagnostic nomme la limitation;
-- le changement concurrent de clipboard empeche toute restauration/effacement;
+- le changement concurrent ou l'etat ownership/sequence inconnu produit zero mutation; les 30 essais `changed` et 30 essais `crash-sentinel/restart-unknown` conservent la valeur sentinelle;
 - aucun contenu de fixture n'apparait dans logs, noms de fichiers ou artefacts techniques.
 
-### 10.5 Permissions, cleanup et local-first
+### 11.5 Permissions, cleanup et local-first
 
-`PASS` si refus/revocation degradent uniquement la capability, si les prompts ne bouclent pas, si hotkeys/hooks/event taps/sessions portal/owners clipboard sont liberes sur tous les chemins, et si une capture avec reseau bloque ne montre aucun egress applicatif. Toute permission non necessaire, persistance de contenu, handler residuel ou egress vaut `FAIL`.
+`PASS` si refus/revocation degradent uniquement la capability, si les prompts ne bouclent pas, si hotkeys/hooks/event taps/sessions portal/owners clipboard sont liberes sur tous les chemins, si `CHANGED`/`UNKNOWN` ne declenchent aucune mutation clipboard, et si une capture avec reseau bloque ne montre aucun egress applicatif. Toute permission non necessaire, persistance de contenu, mutation clipboard en etat non prouve, handler residuel ou egress vaut `FAIL`.
 
-## 11. Matrice de machines et ordre d'execution
+## 12. Matrice de machines et ordre d'execution
 
 | Priorite d'execution | ID | Environnement exact a archiver | Besoin physique | Verdict actuel |
 |---:|---|---|---|---|
@@ -333,7 +445,7 @@ Les seuils restent des cibles proposees tant que la Phase 02 ne les a pas approu
 
 Une VM peut preparer le harnais et prouver un echec de probe, mais les hotkeys physiques, verrouillage, veille, TCC, focus et presse-papiers inter-apps exigent une session interactive sur le systeme qualifie. Chaque machine conserve le meme commit et les memes hashes de fixtures.
 
-## 12. Deroule du spike suivant
+## 13. Deroule du spike suivant
 
 ### Etape A — Probe sans mutation durable
 
@@ -345,7 +457,7 @@ Une VM peut preparer le harnais et prouver un echec de probe, mais les hotkeys p
 
 ### Etape B — Hotkey isolee
 
-Executer le harnais sans audio ni injection. Prouver down/up, conflits, cleanup et verrouillage. Si PTT echoue, conserver toggle UI et ne pas ouvrir le lot cible.
+Executer d'abord `a11y-preflight`, puis le harnais sans audio ni injection. Prouver down/up, conflits, cleanup, verrouillage, navigation clavier et annonces. Si le preflight accessible echoue, ne pas armer la capture. Si PTT echoue apres ce preflight, conserver le toggle UI seulement si son oracle accessible passe, et ne pas ouvrir le lot cible.
 
 ### Etape C — Cible sans remise
 
@@ -353,7 +465,7 @@ Capturer/revalider uniquement l'identite minimale sur fixtures. Ne lire aucune v
 
 ### Etape D — Clipboard et collage synthetiques
 
-Utiliser seulement les fixtures. Introduire les courses focus/clipboard. Evaluer L2 puis exercer L1/L0 meme si L2 passe.
+Utiliser seulement les fixtures. Introduire les courses focus/clipboard, `CHANGED`, crash-sentinelle et redemarrage `UNKNOWN`. Evaluer L2 puis exercer L1/L0 meme si L2 passe; aucune mutation clipboard n'est autorisee apres un etat change ou inconnu.
 
 ### Etape E — Permissions et fautes
 
@@ -363,27 +475,29 @@ Refus, revocation, cible detruite, integrite, verrouillage, crash et redemarrage
 
 Mettre a jour `PLATFORM-CAPABILITIES.md` uniquement depuis des run IDs valides. Toute promotion est bornee a la ligne OS/build/session/compositor/backend/mecanisme. Les hypotheses restantes deviennent dette avec proprietaire et fallback.
 
-## 13. Indicateurs utilisateur requis
+## 14. Indicateurs utilisateur requis
 
 Le spike doit rendre observables, visuellement et via etat accessible du helper:
 
-- `Raccourci disponible`, `Conflit` ou `Utiliser le controle UI`;
+- `Raccourci disponible`, `Raccourci indisponible` ou `Utiliser le controle UI`;
+- `Ecoute en cours`, puis arret explicite pour key-up perdu, verrouillage ou annulation;
 - `Cible memorisee` sans nom/titre de document;
 - `Cible changee — collage annule`;
-- `Copie seule — collez manuellement`;
-- `Collage tente, non confirme` distinct de `Collage confirme`;
+- disclosure accessible du risque clipboard/historique/synchronisation avant `Copier le texte`;
+- `ClipboardPrepared — collez manuellement`;
+- `Unconfirmed`/`OutcomeUnknown` distincts de `ConfirmedExact`;
 - `Permission requise/refusee/revoquee`, avec action de reglage et sans boucle;
-- `Texte brut disponible` jusqu'a copie explicite ou fin choisie par l'utilisateur.
+- `InternalRecovery — texte brut disponible` jusqu'a copie explicite ou fin choisie par l'utilisateur.
 
-L'indicateur Fluent complete, sans remplacer, les indicateurs OS. Aucun succes n'est deduit de la disparition du widget ou du retour de focus.
+Chaque indicateur suit les noms/roles/etats, focus et annonces de section 9. L'indicateur Fluent complete, sans remplacer, les indicateurs OS. Aucun succes n'est deduit de la disparition du widget ou du retour de focus. Si l'indicateur accessible disparait, le watchdog candidat arrete la capture en <= 1 000 ms; il ne transforme pas cette faute en succes.
 
-## 14. Nettoyage et rollback
+## 15. Nettoyage et rollback
 
 ### Nettoyage de chaque essai
 
 - desinscrire hotkey/grab et retirer hook/event tap;
 - fermer les sessions portal et handles natifs;
-- relacher ownership clipboard/selection seulement selon la garde de section 8;
+- ne tenter de relacher/effacer ownership clipboard/selection que dans l'etat de spike `MATCHED`; `CHANGED` ou `UNKNOWN` implique zero mutation;
 - zeroiser best-effort la fixture et le snapshot en memoire;
 - fermer la cible helper et verifier l'absence de processus/hook residuel;
 - ne jamais modifier une permission OS en dehors de l'action utilisateur documentee.
@@ -393,6 +507,7 @@ L'indicateur Fluent complete, sans remplacer, les indicateurs OS. Aucun succes n
 | Echec prouve | Rollback |
 |---|---|
 | PTT global non fiable | toggle UI accessible; autre mecanisme derriere `PlatformAdapter` seulement apres nouvelle preuve |
+| Indicateur accessible absent ou perdu | refuser l'armement ou arreter par watchdog; revenir a une surface principale accessible avant nouvel essai |
 | Snapshot non revalidable | desactiver L2/L3, L1/L0 |
 | Collage simule sous seuil | capability flag off pour mecanisme/cible; copie manuelle |
 | Permission macOS excessive ou UX inacceptable | retirer la voie concernee, garder permissions minimales et L1/L0 |
@@ -401,7 +516,7 @@ L'indicateur Fluent complete, sans remplacer, les indicateurs OS. Aucun succes n
 
 Tout changement de stack, permission structurelle ou garantie de confidentialite exige un ADR. Les prototypes ne contiennent aucune donnee irremplacable et peuvent etre supprimes integralement.
 
-## 15. Integration supply-chain et revue
+## 16. Integration supply-chain et revue
 
 - F-05: aucune nouvelle commande Tauri, WebView ou capability avant registre commandes/fenetres/origines et allowlist approuves.
 - F-01/F-02: le harnais Linux releve le graphe Tauri/Wry/GTK utilise; il ne masque pas `glib 0.18.5` ni les advisories non maintenues. Ce plan ne les resout pas.
@@ -409,13 +524,15 @@ Tout changement de stack, permission structurelle ou garantie de confidentialite
 - Aucun outil de clipboard/hotkey installe globalement ne devient dependance produit par commodite de test.
 - Le `security-reviewer` revoit TM-02 (capture persistante), TM-04 (clipboard), TM-05 (mauvaise cible), TM-14 (IPC) et TM-18 (residus) avant promotion.
 
-## 16. Gate du lot
+## 17. Gate du lot
 
 Ce document passe le lot de conception si:
 
 - chaque OS/session a un mecanisme candidat, un probe et un fallback;
 - Wayland est separe par compositor/backend/capability sans promesse universelle;
 - permissions macOS, cible TOCTOU, clipboard, indicateurs, cleanup et rollback sont testables;
+- l'oracle accessible bloque hotkey/fallback et fixe roles, noms, etats, clavier, focus, annonces, watchdog, matrice AT, artefacts et responsabilites frontend/QA sans pretendre une execution;
+- `CHANGED`/`UNKNOWN` interdit normativement toute mutation clipboard; crash-sentinelle et redemarrage prouvent zero effacement avant toute promotion;
 - commandes, fixtures, artefacts, tailles de campagne et criteres PASS/FAIL sont explicites;
 - `HW-WIN` est la reference pratique seulement si `HW-MAC` est indisponible et cette absence est archivee;
 - les preuves documentaires, hypotheses et environnements indisponibles ne sont jamais confondus avec un resultat natif.
