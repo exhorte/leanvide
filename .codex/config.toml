@@ -1,0 +1,22 @@
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
+
+[features]
+multi_agent = true
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 5
+default_subagent_model = "gpt-5.6-terra"
+default_subagent_reasoning_effort = "medium"
+interrupt_message = true
+
+[mcp_servers.shadcn]
+command = "npx"
+args = ["-y", "shadcn@latest", "mcp"]
+env_vars = ["GITHUB_TOKEN"]
+startup_timeout_sec = 30
+tool_timeout_sec = 120
+enabled = true
+required = false
+

@@ -1,0 +1,30 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials/
+secrets/
+
+# Claude local-only state
+.claude/settings.local.json
+.claude/agent-memory-local/
+
+# JavaScript
+node_modules/
+dist/
+.vite/
+
+# Rust
+target/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# OS and editors
+.DS_Store
+Thumbs.db
+

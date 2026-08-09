@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+set -u
+
+enabled="$(git config --bool leanvibe.autoPush 2>/dev/null || echo false)"
+[ "$enabled" = "true" ] || exit 0
+
+branch="$(git branch --show-current)"
+[ -n "$branch" ] || exit 0
+
+case "$branch" in
+  main|develop)
+    echo "Auto-push skipped on protected branch $branch; use a pull request."
+    exit 0
+    ;;
+esac
+
+if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+  git push || echo "WARNING: automatic push failed; local commit is preserved." >&2
+else
+  git push --set-upstream origin "$branch" || echo "WARNING: initial automatic push failed; local commit is preserved." >&2
+fi
+
+exit 0
+

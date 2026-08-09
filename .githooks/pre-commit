@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+set -eu
+
+staged_files="$(git diff --cached --name-only --diff-filter=ACMR)"
+
+if printf '%s\n' "$staged_files" | grep -E '(^|/)\.env($|\.)' | grep -v -E '(^|/)\.env\.example$' >/dev/null 2>&1; then
+  echo "ERROR: staged .env file detected. Secrets must not be committed." >&2
+  exit 1
+fi
+
+if git diff --cached --no-ext-diff --unified=0 -- . \
+  | grep '^+' \
+  | grep -v '^+++' \
+  | grep -E '(github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,})' >/dev/null 2>&1; then
+  echo "ERROR: potential credential detected in staged content." >&2
+  exit 1
+fi
+
+exit 0
+
