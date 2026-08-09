@@ -3,8 +3,8 @@
 - Statut: **Accepté sous conditions de spikes**
 - Date: 2026-08-09
 - Décideurs: project-manager + product-architect; validation des gates par les leads concernés
-- Portée: fondation technique desktop; aucun choix de segment, OS prioritaire, Cloud MVP, licence ou modèle économique
-- Décisions liées: D-03 à D-06, D-09 à D-14 restent ouvertes
+- Portée: fondation technique desktop et conséquences architecturales des décisions produit confirmées
+- Décisions liées: D-01 à D-14 confirmées le 2026-08-09; performances et capacités restent soumises aux spikes
 - Retour arrière: possible jusqu'au Gate de Phase 02 selon la section 11
 
 ## 1. Contexte
@@ -20,7 +20,7 @@ Le dépôt fixe déjà une architecture cible dans `AGENTS.md`, `CLAUDE.md` et l
 - SQLite pour les données locales;
 - Python/FastAPI/PostgreSQL uniquement pour un Cloud facultatif.
 
-Cet ADR transforme cette cible en décision traçable, compare les solutions de repli et définit les conditions qui peuvent encore l'invalider. Il ne confirme pas les préférences produit encore ouvertes dans [VISION.md](../product/VISION.md).
+Cet ADR transforme cette cible en décision traçable, compare les solutions de repli et définit les conditions qui peuvent encore l'invalider. Les décisions produit confirmées dans [VISION.md](../product/VISION.md) fixent désormais le périmètre auquel la stack doit répondre; elles ne constituent pas une preuve de performance ou de compatibilité OS.
 
 ## 2. Forces et contraintes de décision
 
@@ -31,9 +31,12 @@ Cet ADR transforme cette cible en décision traçable, compare les solutions de 
 5. Une réécriture générative future doit conserver un retour déterministe au texte brut.
 6. Le widget doit rester minimal; le dashboard peut utiliser un système de composants plus riche.
 7. Les moteurs ASR et adaptateurs OS doivent être remplaçables sans réécrire le domaine.
-8. Le Cloud reste facultatif et ne justifie pas une infrastructure distribuée avant besoin mesuré.
-9. L'existence d'une application WPF externe n'est pas établie; aucun artefact WPF n'existe dans ce dépôt.
-10. Le statut public actuel et l'absence de licence exigent une décision séparée; ils ne déterminent pas la stack.
+8. Le Cloud est absent du MVP: seuls des ports sans implémentation distante sont permis. Des services Cloud/synchronisation futurs resteraient facultatifs et payants; le chemin local demeure gratuit et sans compte.
+9. Fluent est greenfield. Aucune migration WPF n'est autorisée sans dépôt ou inventaire externe fourni et nouvel ADR.
+10. Le dépôt reste public et le code adopte Apache-2.0; les dépendances, modèles, données et marques conservent leurs licences propres et doivent être vérifiés séparément.
+11. La référence est macOS Apple Silicon si une machine de test est disponible; à défaut, Windows devient la référence pratique. L'ordre produit reste macOS -> Linux -> Windows.
+12. Le MVP est français, en push-to-talk par défaut avec toggle accessible, sans écoute continue.
+13. Le minimum provisoire est 4 cœurs modernes, 8 Gio de RAM et 2 Gio libres, sans GPU dédié requis; la référence vise 16 Gio et reste à qualifier en Phase 02.
 
 ## 3. Décision
 
@@ -76,18 +79,18 @@ Utiliser **whisper.cpp comme premier candidat**, pas comme dépendance irrévers
 - backend encapsulé derrière un trait;
 - modèle, quantification et accélération choisis par benchmark;
 - provenance, licence, checksum, reprise de téléchargement et suppression obligatoires;
-- aucune promesse de langue, précision ou matériel avant D-05/D-06 et baseline;
+- le français est la langue du MVP; aucune promesse de précision ou de support matériel définitif avant les benchmarks et la baseline;
 - moteur additionnel seulement si une lacune mesurée le justifie.
 
 ### 3.3 Données locales
 
-Utiliser **SQLite** pour configuration structurée, métadonnées et, si D-08 l'autorise, historique textuel. Les gros fichiers de modèles restent hors base avec manifeste et intégrité.
+Utiliser **SQLite** pour configuration structurée, métadonnées et historique textuel lorsqu'il est explicitement activé. Le défaut reste zero-history, avec rétention configurable si opt-in. Les gros fichiers de modèles restent hors base avec manifeste et intégrité.
 
-La rétention audio n'est pas décidée par cet ADR. L'implémentation ne peut pas créer un historique audio par défaut avant D-08 et le threat model.
+Aucun audio n'est persisté par défaut. Toute option future de persistance audio exige une décision et une conception sécurité distinctes; elle n'est pas autorisée implicitement par SQLite.
 
-### 3.4 Cloud facultatif
+### 3.4 Ports Cloud sans implémentation au MVP
 
-Si D-10 autorise ultérieurement un Cloud:
+Le MVP ne contient aucune implémentation Cloud. Les contrats/ports peuvent préserver la réversibilité architecturale. Si un cadrage ultérieur autorise des services Cloud ou de synchronisation facultatifs et payants:
 
 - commencer par un monolithe modulaire Python/FastAPI;
 - PostgreSQL devient la source transactionnelle serveur;
@@ -95,7 +98,7 @@ Si D-10 autorise ultérieurement un Cloud:
 - Redis, ClickHouse, Temporal, SQS, microservices ou orchestration complexe exigent des métriques et un ADR supplémentaire;
 - la défaillance Cloud ne doit pas invalider le chemin local ni faire perdre le texte brut.
 
-Cet ADR n'autorise ni compte obligatoire, ni audio Cloud dans le MVP, ni fournisseur IA particulier.
+Cet ADR n'autorise ni compte pour le chemin local, ni audio Cloud dans le MVP, ni fournisseur IA particulier.
 
 ## 4. Options comparées
 
@@ -104,7 +107,7 @@ Cet ADR n'autorise ni compte obligatoire, ni audio Cloud dans le MVP, ni fournis
 | A — Tauri 2 + Rust + React/TS/Vite | WebViews système, cœur et adaptateurs Rust | cible les 3 OS; comportement WebView et natif à prouver | moyen/élevé: Rust + quatre environnements Linux séparés | mutualisation élevée du core/UI, adaptateurs spécialisés | WebViewGTK, plugins, permissions, FFI, compétences Rust | bonne si contrats core/adaptateurs restent indépendants |
 | B — Electron + React/TS + helpers natifs | runtime Chromium/Node embarqué, helpers par OS | large et plus homogène côté UI | moyen; écosystème riche | mémoire, taille, surface supply-chain et doubles stacks natives | poids, mises à jour runtime, IPC et helpers multiples | moyenne; UI réutilisable, core temps réel à reconstruire/intégrer |
 | C — clients natifs distincts | AppKit/Swift, WinUI/WPF/C#, Linux toolkit dédié | meilleure expressivité native par OS | très élevé | trois UI, trois intégrations et divergence comportementale | parité, coordination, tests et vitesse de livraison | faible une fois trois produits développés |
-| D — WPF d'abord puis ports | partir d'une application Windows existante | Windows d'abord, macOS/Linux réécrits | inconnu: source WPF non fournie | migrations et divergence probables | hypothèse non prouvée, contrats hérités, double investissement | inconnue avant inventaire D-14 |
+| D — WPF d'abord puis ports | partir d'une application Windows existante | Windows d'abord, macOS/Linux réécrits | inconnu: source WPF non fournie | migrations et divergence probables | contredit le cadrage greenfield; contrats hérités et double investissement | faible sans inventaire et nouvel ADR |
 
 ## 5. Pourquoi l'option A
 
@@ -143,18 +146,18 @@ Ce choix n'est pas motivé par la seule stack d'un concurrent. `project_context.
 | SQLite/rétention expose des données | confidentialité/perte de données | schéma minimal, migrations, permissions, suppression, threat model | exigence de chiffrement/sync non compatible avec le modèle |
 | Cloud contamine le chemin local | panne réseau ou collecte implicite | frontière de ports, feature flag, tests réseau bloqué | dictée locale requiert auth ou service distant |
 | supply-chain/modèles incompatibles | distribution interdite ou compromise | lockfiles, SBOM/provenance/checksums, décision de licence | licence incompatible ou artefact invérifiable |
-| application WPF externe découverte tardivement | duplication/migration coûteuse | fermer D-14 avant fondation irréversible | inventaire révèle un core réutilisable ou données à migrer |
+| application WPF externe découverte tardivement | duplication/migration coûteuse | rester greenfield; n'évaluer une source externe que par inventaire borné | inventaire révèle un core réutilisable ou des données à migrer et déclenche un nouvel ADR |
 
 ## 8. Compatibilité OS attendue
 
 | Environnement | Engagement de l'ADR | Pas d'engagement |
 |---|---|---|
-| Windows | adaptateur Rust natif, capture/hotkey/remise évaluées, WebView Tauri | toutes versions, applications élevées ou injection universelle |
-| macOS | adaptateur Rust natif, permissions explicites, signature/notarisation avant bêta | toutes versions/architectures, contournement de Secure Input |
-| Linux X11 | adaptateur et dépendances bornés à une distribution/DE de référence | toutes distributions ou WM |
-| Linux Wayland | détection par capacités, portals/voies autorisées, L1/L0 toujours conçus | hotkey, focus ou injection universels |
+| macOS Apple Silicon — référence si machine disponible | adaptateur Rust natif prioritaire, permissions explicites, signature/notarisation avant bêta | toutes versions/architectures, contournement de Secure Input |
+| Linux X11 — deuxième cible | adaptateur et dépendances bornés à une distribution/DE de référence | toutes distributions ou WM |
+| Linux Wayland — deuxième cible, environnement distinct | détection par capacités, portals/voies autorisées, L1/L0 toujours conçus | hotkey, focus ou injection universels |
+| Windows — troisième cible produit; référence pratique si Apple Silicon indisponible | adaptateur Rust natif, capture/hotkey/remise évaluées, WebView Tauri | toutes versions, applications élevées ou injection universelle |
 
-Les versions et architectures supportées dépendent de D-03, D-04 et D-06. La matrice détaillée vit dans [PLATFORM-CAPABILITIES.md](../product/PLATFORM-CAPABILITIES.md).
+Les versions supportées et la qualification du plancher matériel restent à déterminer par les spikes. La matrice détaillée vit dans [PLATFORM-CAPABILITIES.md](../product/PLATFORM-CAPABILITIES.md).
 
 ## 9. Contrats à figer avant implémentations parallèles
 
@@ -165,9 +168,9 @@ Les versions et architectures supportées dépendent de D-03, D-04 et D-06. La m
 5. **TargetContext**: identifiant opaque minimal, durée de validité et consentement.
 6. **TextDelivery**: niveaux L0-L3, résultat confirmable, fallback et erreurs.
 7. **PlatformCapabilities**: capacités détectées, permissions, raisons de dégradation.
-8. **Persistence**: catégories, transactions, migration, purge et politique D-08.
+8. **Persistence**: catégories, transactions, migration, purge, zero-history par défaut et historique texte opt-in configurable.
 9. **IPC UI**: commandes/événements versionnés, payloads bornés, aucune donnée sensible par défaut.
-10. **Cloud ports**: absents du chemin critique; activables seulement après D-09/D-10.
+10. **Cloud ports**: sans implémentation distante au MVP et absents du chemin critique; activables seulement après un nouveau cadrage.
 
 Les signatures concrètes seront un ADR ou contrat de Phase 02. Cet ADR n'autorise pas plusieurs agents à inventer des versions concurrentes.
 
@@ -210,8 +213,8 @@ L'option A est réversible à faible coût jusqu'au Gate de Phase 02, avant que 
 | Tauri empêche une intégration critique | écrire un adaptateur/sidecar natif borné; si le coût reste excessif, remplacer le shell sans changer core/traits |
 | whisper.cpp échoue aux budgets | substituer un moteur derrière `AsrEngine`; ne pas migrer l'UI ni la remise |
 | SQLite ne répond plus aux contraintes locales | exporter via le port de persistance puis migrer avec double lecture bornée; aucune synchro implicite |
-| Cloud refusé par D-10 | ne pas créer `services/api`; les ports restent sans implémentation distante |
-| WPF externe réutilisable découvert | inventorier contrats/données; décider par nouvel ADR entre extraction, migration ou coexistence |
+| Cloud absent selon D-10 | ne pas créer `services/api`; les ports restent sans implémentation distante |
+| WPF externe réutilisable découvert | maintenir le greenfield par défaut; inventorier contrats/données puis décider par nouvel ADR entre exclusion, extraction, migration ou coexistence |
 
 ### Autorité de rollback
 
@@ -235,21 +238,21 @@ Le project-manager arrête les implémentations dépendantes et ouvre un nouvel 
 - tests matériels et packaging incontournables;
 - bénéfices de poids/performance non garantis avant benchmarks.
 
-### Neutres / décisions non prises
+### Décisions produit appliquées; validations non acquises
 
-- `Fluent` reste un nom de travail;
-- aucune plateforme de référence ni ordre OS n'est choisi;
-- aucune langue, machine minimale ou métrique finale n'est confirmée;
-- push-to-talk, historique, compte et Cloud MVP restent ouverts;
-- le dépôt public actuel n'équivaut pas à une décision open source;
-- aucune licence ni monétisation n'est choisie;
-- aucune migration WPF n'est autorisée sans source inventoriée.
+- Fluent est le nom confirmé; la vérification marque/domaine reste à faire avant publication;
+- macOS Apple Silicon est la référence si la machine est disponible; à défaut, Windows devient la référence pratique sans changer silencieusement l'ordre produit macOS/Linux/Windows; versions et capacités restent à prouver;
+- le MVP français et le plancher matériel provisoire sont confirmés, mais corpus, seuils et performances finales restent à qualifier;
+- push-to-talk par défaut, toggle accessible, zero-history, chemin local sans compte et absence de Cloud au MVP sont fixés; leur implémentation reste à tester;
+- le dépôt public et Apache-2.0 sont décidés; compatibilité des dépendances, modèles, données et actifs reste à auditer;
+- le cœur local est gratuit et les futurs services Cloud/synchronisation facultatifs payants; leur frontière commerciale n'est pas conçue par cet ADR;
+- Fluent est greenfield; toute source WPF externe exige un inventaire et un nouvel ADR avant changement de stratégie.
 
 ## 13. Alternatives écartées ou différées
 
 - **Electron**: solution de repli si Tauri/WebView échoue aux spikes, pas choix initial en raison du runtime embarqué, de la surface et du besoin persistant de helpers natifs.
 - **trois clients natifs**: différés; coût et divergence trop élevés avant validation du produit.
-- **WPF-first**: non évalué faute d'application source dans le périmètre actuel.
+- **WPF-first**: écarté par D-14; aucune source n'est dans le périmètre et un inventaire externe ne peut être considéré que par nouvel ADR.
 - **backend distribué dès le MVP**: rejeté sans charge, compte, Cloud ni économie confirmés.
 - **logique audio/ASR dans le frontend**: rejetée pour les contraintes temps réel, ressources et permissions.
 - **injection unique sans fallback**: rejetée car incompatible avec les limites OS, notamment Wayland.
@@ -259,8 +262,8 @@ Le project-manager arrête les implémentations dépendantes et ouvre un nouvel 
 Réexaminer cet ADR:
 
 - au Gate de Phase 02;
-- si D-14 révèle une base WPF externe substantielle;
+- si un inventaire externe révèle une base WPF substantielle et justifie de réexaminer le cadrage greenfield;
 - si le spike Tauri échoue sur la plateforme de référence;
 - si aucun moteur derrière le contrat proposé n'atteint les budgets acceptés;
 - si une exigence de licence, sécurité ou distribution interdit une dépendance structurante;
-- si D-03/D-04 réduit le produit à un seul OS pour une durée rendant une stack native objectivement moins coûteuse.
+- si les résultats sur la référence macOS ou l'ordre macOS/Linux/Windows conduisent à un nouveau cadrage mono-OS rendant une stack native objectivement moins coûteuse.

@@ -1,8 +1,8 @@
 # Vision produit de Fluent
 
-Statut: **cadrage proposé — décisions utilisateur requises**
+Statut: **cadrage produit confirmé — validations d'usage et prototypes requis**
 
-Cycle: `CYCLE-20260809-01`
+Cycle: `CYCLE-20260809-02`
 
 Phase: `PHASE-00`
 
@@ -10,13 +10,13 @@ Dernière mise à jour: 2026-08-09
 
 ## 1. Intention
 
-Fluent est le nom de travail d'une application desktop de dictée vocale multiplateforme. Elle vise à transformer une parole courte en texte utilisable dans l'application active, avec un chemin local maîtrisable et des intégrations Cloud qui ne deviennent jamais implicites.
+Fluent est le nom confirmé d'une application desktop de dictée vocale multiplateforme. Elle vise en priorité les professionnels à forte production écrite sensibles à la confidentialité et transforme une parole courte en texte utilisable dans l'application active, avec un chemin local maîtrisable.
 
-La promesse candidate est:
+La promesse de cadrage est:
 
 > Dicter dans ses outils quotidiens avec une latence prévisible, un résultat récupérable et un contrôle explicite des données.
 
-Cette formulation décrit une direction, pas encore un engagement commercial. Le nom définitif, le segment principal, la plateforme de référence, les langues, le matériel minimal et le modèle économique restent à décider.
+Cette formulation décrit la direction produit, pas une garantie de performance avant les prototypes. Le MVP est français, sans compte ni Cloud, avec macOS Apple Silicon comme référence si une machine de test est disponible; à défaut, Windows devient la référence pratique. Le plancher provisoire est une machine moderne à 4 cœurs, 8 Gio de RAM et 2 Gio libres, sans GPU dédié requis; la référence vise 16 Gio. Le cœur local est gratuit; d'éventuels services Cloud ou de synchronisation futurs seront facultatifs et payants.
 
 ## 2. Problème à résoudre
 
@@ -31,20 +31,20 @@ Les solutions de dictée généralistes imposent souvent au moins un des comprom
 
 Fluent doit démontrer, par des mesures et non par une promesse générale, quels compromis il élimine réellement sur chaque plateforme supportée.
 
-## 3. Principes candidats et contraintes actuelles
+## 3. Principes confirmés et contraintes actuelles
 
 | Élément | Nature actuelle | Conséquence de cadrage |
 |---|---|---|
 | Aucune donnée audio ne quitte la machine sans consentement explicite | contrainte normative du dépôt | tout flux distant doit être opt-in, visible et testable |
-| Approche local-first | direction inscrite dans la mission, confirmation produit encore requise | le MVP candidat garde un chemin de dictée local indépendant d'un service distant |
+| Approche local-first | décision produit confirmée | le MVP garde un chemin de dictée local indépendant d'un service distant et utilisable sans compte |
 | Texte brut récupérable | proposition produit | toute réécriture doit conserver un retour déterministe au brut si cette proposition est confirmée |
-| Push-to-talk | proposition produit | ne pas exclure le mode toggle ou l'écoute continue avant arbitrage |
+| Push-to-talk | décision produit confirmée | push-to-talk par défaut, toggle accessible; aucune écoute continue au MVP |
 | Injection puis fallback presse-papiers | proposition produit | ne pas promettre l'injection universelle, en particulier sous Wayland |
 | Indicateur visible pendant la capture et le traitement | proposition produit | à confirmer avec les exigences UX et d'accessibilité |
-| Aucun compte ou Cloud obligatoire | proposition produit | l'architecture doit permettre cette option sans en faire encore une décision MVP |
-| Aucune rétention audio | proposition produit | la politique de rétention complète reste ouverte |
+| Aucun compte requis sur le chemin local; Cloud absent du MVP | décision produit confirmée | seuls les ports Cloud sont conservés, sans implémentation distante au MVP |
+| Zero-history par défaut; aucun audio persisté par défaut | décision produit confirmée | un historique texte local reste opt-in, avec rétention configurable; aucune persistance audio implicite |
 
-## 4. Valeur différenciante candidate
+## 4. Valeur différenciante à valider par l'usage
 
 1. **Contrôle**: l'utilisateur sait quand le microphone est actif, quel traitement est choisi et si une donnée quitte l'appareil.
 2. **Résilience**: un échec d'injection ou de réécriture ne doit pas faire perdre une transcription déjà obtenue.
@@ -52,32 +52,33 @@ Fluent doit démontrer, par des mesures et non par une promesse générale, quel
 4. **Performance mesurée**: armement, fin-de-parole, temps réel, mémoire, CPU et taux d'insertion sont mesurés sur un matériel nommé.
 5. **Architecture progressive**: le Cloud, la synchronisation, les moteurs additionnels et l'infrastructure distribuée ne sont ajoutés qu'après un besoin validé.
 
-Ces cinq points sont des axes de conception proposés. Ils ne remplacent pas la confirmation du segment et de la proposition de valeur.
+Ces cinq points sont des axes de conception. Le segment est confirmé par D-02, mais leur valeur réelle reste à valider par recherche utilisateur et tests.
 
 ## 5. Horizons de produit
 
-### MVP proposé
+### MVP confirmé
 
-- un parcours de dictée desktop de bout en bout sur la plateforme de référence à choisir;
-- capture contrôlée par l'utilisateur;
+- un parcours de dictée desktop de bout en bout sur macOS Apple Silicon si la machine de test requise est disponible, sinon sur Windows comme référence pratique;
+- capture en push-to-talk par défaut, avec toggle accessible et sans écoute continue;
 - transcription avec un moteur local derrière une interface stable;
 - remise du texte à l'application cible ou fallback explicite et récupérable;
 - widget minimal indiquant les états essentiels;
 - configuration locale du microphone, du raccourci et du modèle;
 - diagnostics locaux expurgés de contenu dicté;
-- aucune dépendance à une infrastructure distribuée.
+- fonctionnement local sans compte, authentification ni réseau;
+- aucune implémentation Cloud ou dépendance à une infrastructure distribuée.
 
-Ce périmètre ne devient contractuel qu'après les arbitrages D-01 à D-14 et la validation des métriques proposées dans le [PRD MVP](PRD-MVP.md).
+Ce périmètre traduit les décisions D-01 à D-14 confirmées le 2026-08-09. Ses niveaux de performance et ses capacités OS restent conditionnés aux mesures et spikes décrits dans le [PRD MVP](PRD-MVP.md).
 
 ### V1 proposée
 
-- couverture stable des trois familles de systèmes dans l'ordre qui sera décidé;
+- couverture stable des trois familles de systèmes dans l'ordre macOS, Linux, Windows;
 - dictionnaire personnel et profils contextuels;
 - gestion robuste des modèles et mises à jour;
-- historique textuel local si la politique de rétention l'autorise;
+- historique textuel local opt-in, avec rétention configurable et suppression contrôlée;
 - réécriture optionnelle avec retour déterministe au texte brut;
 - accélérations matérielles validées par plateforme;
-- Cloud, compte ou synchronisation uniquement si D-09 et D-10 les autorisent.
+- Cloud ou synchronisation facultatifs et payants seulement après un nouveau cadrage; aucun compte ne devient requis pour le chemin local.
 
 ### Ultérieur
 
@@ -96,46 +97,46 @@ Ce périmètre ne devient contractuel qu'après les arbitrages D-01 à D-14 et l
 - remplacer une solution d'accessibilité médicale certifiée;
 - conserver ou utiliser des dictées pour entraîner un modèle sans décision et consentement séparés;
 - garantir des performances sans plateforme, matériel, langue, corpus et protocole de mesure définis;
-- migrer une éventuelle application WPF externe avant d'en avoir établi l'existence et le périmètre.
+- intégrer ou migrer une éventuelle application WPF externe sans inventaire et nouvel ADR; le produit est greenfield dans le périmètre actuel.
 
 ## 6. Registre des 14 décisions produit
 
-Le statut **ouvert** signifie qu'une décision explicite de l'utilisateur ou du sponsor manque. Un fait observé ou une recommandation ne ferme jamais la décision à lui seul.
+L'utilisateur a accepté D-01 à D-14 exactement comme recommandées le 2026-08-09. La preuve de décision est tenue par le manager dans `docs/project-management/PHASE-00-PRODUCT-DECISIONS.md` et `CYCLE-20260809-02`.
 
-| ID | Sujet | Fait ou signal disponible | Recommandation candidate | Statut |
-|---|---|---|---|---|
-| D-01 | Nom définitif: Fluent, Leanvide ou autre | les documents emploient `Fluent`; le dépôt est nommé `leanvibeApp` | utiliser `Fluent` comme nom de travail jusqu'à arbitrage marque/domaine | **ouverte**; `Fluent` est inféré comme nom de travail, pas confirmé comme nom définitif |
-| D-02 | Utilisateur cible principal | aucun entretien, segment ou preuve d'usage n'est versionné | commencer par le professionnel desktop qui rédige fréquemment et valorise la confidentialité | **ouverte**; persona principal seulement hypothétique |
-| D-03 | Plateforme de référence | la mission cite macOS, Linux et Windows sans référence prioritaire | choisir une seule combinaison OS + matériel pour les budgets et le premier parcours E2E | **ouverte** |
-| D-04 | Ordre Windows/macOS/Linux | la roadmap ordonne les phases macOS, Linux, puis Windows, sans décision produit documentée | décider selon utilisateurs cibles, machines de test et risques d'intégration | **ouverte**; l'ordre de roadmap est un plan, pas une confirmation utilisateur |
-| D-05 | Langues du MVP | aucune liste validée | limiter le MVP aux langues disposant d'un corpus de test maintenable | **ouverte** |
-| D-06 | Matériel minimal | aucun CPU, RAM, architecture ou accélérateur de référence n'est nommé | définir un plancher sans GPU et un matériel de référence avant de fixer la latence | **ouverte** |
-| D-07 | Push-to-talk ou écoute continue | le push-to-talk est une préférence de cadrage | retenir provisoirement le push-to-talk pour minimiser capture et ambiguïté, tout en évaluant toggle | **ouverte** |
-| D-08 | Politique d'historique | aucune durée, catégorie ou valeur par défaut n'est confirmée | ne pas retenir l'audio; rendre l'historique texte local, désactivable et effaçable si confirmé | **ouverte**; l'absence de rétention audio est une proposition |
-| D-09 | Compte obligatoire ou non | l'architecture prévoit un Cloud facultatif | permettre l'essai et le chemin local sans compte | **ouverte** |
-| D-10 | Cloud présent ou absent du MVP | le Cloud est prévu comme option architecturale future | garder le Cloud hors chemin critique; décider séparément s'il existe dans le MVP | **ouverte** |
-| D-11 | Dépôt public ou privé | le dépôt GitHub actuel a été vérifié **public** par le manager | confirmer que cette exposition correspond à l'intention avant tout code ou actif sensible | **ouverte**; visibilité actuelle confirmée, politique future non confirmée |
-| D-12 | Licence du code | aucune licence n'a été détectée dans le dépôt | choisir une licence avant d'accepter des contributions ou de présenter le code comme open source | **ouverte** |
-| D-13 | Modèle économique | aucun modèle validé n'est versionné | différer la facturation jusqu'à validation du segment et des coûts locaux/Cloud | **ouverte** |
-| D-14 | Existence d'une application WPF à migrer | aucun `.cs`, `.csproj`, `.sln` ou `.xaml` n'existe dans ce dépôt | traiter Fluent comme greenfield tant qu'un dépôt ou inventaire WPF externe n'est pas fourni, sans conclure qu'il n'existe pas | **ouverte**; absence locale confirmée, existence externe inconnue |
+| ID | Décision confirmée | Statut |
+|---|---|---|
+| D-01 | le nom définitif est **Fluent**, sous réserve d'une vérification marque/domaine avant publication | **CONFIRMÉE — 2026-08-09** |
+| D-02 | le persona principal est le professionnel desktop à forte production écrite, sensible à la confidentialité | **CONFIRMÉE — 2026-08-09** |
+| D-03 | la référence est macOS Apple Silicon si une machine de test est disponible; à défaut, Windows devient la référence pratique | **CONFIRMÉE — 2026-08-09** |
+| D-04 | l'ordre des plateformes est macOS, puis Linux, puis Windows | **CONFIRMÉE — 2026-08-09** |
+| D-05 | la langue du MVP est le français; les termes anglais/code du corpus ne constituent pas une promesse bilingue | **CONFIRMÉE — 2026-08-09** |
+| D-06 | le minimum provisoire est 4 cœurs modernes, 8 Gio de RAM et 2 Gio libres, sans GPU dédié requis; la référence vise 16 Gio | **CONFIRMÉE — 2026-08-09** |
+| D-07 | push-to-talk par défaut avec toggle accessible; aucune écoute continue au MVP | **CONFIRMÉE — 2026-08-09** |
+| D-08 | zero-history par défaut; historique texte local opt-in à rétention configurable; aucun audio persisté par défaut | **CONFIRMÉE — 2026-08-09** |
+| D-09 | aucun compte n'est requis pour installer et utiliser le chemin local | **CONFIRMÉE — 2026-08-09** |
+| D-10 | le Cloud est absent du MVP; seuls ses contrats/ports existent, sans implémentation distante | **CONFIRMÉE — 2026-08-09** |
+| D-11 | le dépôt reste public | **CONFIRMÉE — 2026-08-09** |
+| D-12 | le code est sous licence Apache-2.0; modèles, données et marques conservent leurs licences propres | **CONFIRMÉE — 2026-08-09** |
+| D-13 | le cœur local est gratuit; les futurs services Cloud/synchronisation facultatifs seront payants | **CONFIRMÉE — 2026-08-09** |
+| D-14 | Fluent est greenfield; aucune migration WPF sans dépôt ou inventaire fourni | **CONFIRMÉE — 2026-08-09** |
 
 ### Synthèse des statuts
 
-- décisions utilisateur confirmées parmi les 14: **0**;
-- décisions inférées mais non confirmées: D-01 (nom de travail) et D-02 (persona candidat), ainsi que des recommandations sur D-07 à D-10;
-- décisions ouvertes: **D-01 à D-14**;
-- faits confirmés indépendants d'une décision: dépôt actuel public, aucune licence détectée, aucun artefact WPF détecté dans ce dépôt.
+- décisions utilisateur confirmées parmi les 14: **14**;
+- décisions ouvertes parmi D-01 à D-14: **0**;
+- validations encore nécessaires: disponibilité de la machine Apple Silicon et activation éventuelle du fallback Windows, recherche d'usage, vérification marque/domaine, corpus français, versions OS et performances mesurées;
+- toute éventuelle base WPF externe est hors périmètre; sa découverte peut déclencher un nouvel ADR sans rouvrir silencieusement D-14.
 
-## 7. Preuves attendues pour fermer le cadrage
+## 7. Preuves et validations restantes
 
-- réponse explicite et datée pour chaque décision D-01 à D-14;
-- entretiens ou tests de problème pour le persona principal;
-- plateforme et matériel de référence disponibles pour les benchmarks;
+- acceptation explicite et datée de D-01 à D-14: acquise le 2026-08-09;
+- entretiens ou tests de problème pour valider les hypothèses du persona principal sans remettre en cause sa priorisation;
+- disponibilité d'une machine macOS Apple Silicon de référence pour les benchmarks, ou enregistrement du passage à Windows comme référence pratique;
 - protocole et corpus nommés pour les métriques ASR;
 - test de faisabilité des hotkeys, permissions, focus et insertion sur chaque environnement ciblé;
-- threat model et politique de rétention validés avant toute collecte ou synchronisation;
-- décision de licence cohérente avec le statut public du dépôt;
-- inventaire de l'éventuelle base WPF externe avant toute stratégie de migration.
+- threat model et contrôles de rétention validés avant toute collecte ou synchronisation;
+- vérification de compatibilité entre Apache-2.0, dépendances, modèles et actifs distribués;
+- inventaire de toute éventuelle base WPF externe avant qu'un nouvel ADR puisse envisager son intégration.
 
 ## 8. Documents liés
 

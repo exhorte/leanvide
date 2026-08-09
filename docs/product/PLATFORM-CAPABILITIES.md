@@ -1,8 +1,8 @@
 # Matrice plateformes et capacités
 
-Statut: **cible proposée, à prouver par spikes**
+Statut: **ordre et référence confirmés, capacités à prouver par spikes**
 
-Décisions liées: `D-03` à `D-07`
+Décisions liées: `D-03` à `D-10`, `D-13` et `D-14` — confirmées le 2026-08-09
 
 Références: [PRD MVP](PRD-MVP.md), [ADR-0001](../architecture/ADR-0001-STACK-CIBLE.md)
 
@@ -16,10 +16,10 @@ La matrice décrit des voies techniques candidates, pas des fonctionnalités dé
 | `SPIKE` | faisabilité ou comportement à démontrer avant engagement |
 | `FALLBACK` | résultat récupérable sans automatisation complète |
 | `LIMITÉ` | support borné à des versions/configurations nommées |
-| `HORS MVP` | aucun engagement dans le MVP candidat |
-| `OUVERT` | dépend d'une décision produit D-01 à D-14 |
+| `HORS MVP` | aucun engagement dans le MVP |
+| `CONFIRMÉ` | décision de périmètre prise, sans preuve de faisabilité implicite |
 
-## 2. Politique de support proposée
+## 2. Politique de support
 
 Une plateforme n'est « supportée » que si les éléments suivants sont nommés et testés ensemble:
 
@@ -33,26 +33,28 @@ Une plateforme n'est « supportée » que si les éléments suivants sont nommé
 - format de packaging, signature et mise à jour;
 - matériel minimal et matériel de référence.
 
-`Windows`, `macOS` ou `Linux` seuls ne constituent donc pas une déclaration de support.
+`Windows`, `macOS` ou `Linux` seuls ne constituent donc pas une déclaration de support. D-03 fixe macOS Apple Silicon comme référence si une machine est disponible; à défaut, Windows devient la référence pratique. D-06 fixe un minimum provisoire de 4 cœurs modernes, 8 Gio de RAM et 2 Gio libres, sans GPU dédié requis, et une référence à 16 Gio; le support définitif dépend des benchmarks de Phase 02.
 
-## 3. Matrice fonctionnelle candidate
+## 3. Matrice fonctionnelle cible
+
+D-07 confirme le push-to-talk par défaut et le toggle accessible, sans écoute continue au MVP. Les marques `SPIKE` ci-dessous portent sur leur faisabilité par environnement, pas sur la réouverture de cette interaction.
 
 | Capacité | Windows | macOS | Linux X11 | Linux Wayland |
 |---|---|---|---|---|
-| Shell Tauri 2 + WebView système | `CIBLE`, versions à décider | `CIBLE`, versions/architectures à décider | `CIBLE`, distribution/WebKitGTK à décider | `CIBLE`, distribution/WebKitGTK à décider |
+| Shell Tauri 2 + WebView système | `CIBLE`, versions à borner | `CIBLE`, référence Apple Silicon; version à borner | `CIBLE`, distribution/WebKitGTK à borner | `CIBLE`, distribution/WebKitGTK à borner |
 | Capture microphone | `SPIKE` périphériques, changements et permission | `SPIKE` permission et changements de périphérique | `SPIKE` pile audio retenue | `SPIKE` pile audio + PipeWire/portal selon environnement |
 | Push-to-talk global | `SPIKE` conflits, key-up perdu, élévation | `SPIKE` permission Input Monitoring/Accessibility selon voie | `SPIKE` serveur X et conflits WM | `LIMITÉ/SPIKE`; dépend compositor/portal, aucune universalité promise |
-| Mode toggle | `CIBLE` comme repli potentiel | `CIBLE` comme repli potentiel | `CIBLE` comme repli potentiel | `CIBLE` si hotkey disponible; sinon contrôle UI |
-| Écoute continue | `HORS MVP` tant que D-07 ouverte | `HORS MVP` | `HORS MVP` | `HORS MVP` |
+| Mode toggle | `CONFIRMÉ`, accessibilité et contrôle à prouver | `CONFIRMÉ`, accessibilité et contrôle à prouver | `CONFIRMÉ`, accessibilité et contrôle à prouver | `CONFIRMÉ`; hotkey si disponible, sinon contrôle UI |
+| Écoute continue | `HORS MVP` | `HORS MVP` | `HORS MVP` | `HORS MVP` |
 | Widget toujours visible | `SPIKE` focus, multi-écrans, DPI | `SPIKE` Spaces, plein écran, niveaux de fenêtre | `SPIKE` WM, multi-écrans, scaling | `SPIKE`; règles du compositor |
 | Détection de cible | `SPIKE` fenêtre/processus et niveaux d'intégrité | `SPIKE` application/fenêtre et permissions | `SPIKE` fenêtres X11/WM | `LIMITÉ/SPIKE`; protocole et compositor |
 | Injection/collage automatisé | `SPIKE`; API native et focus à tester | `SPIKE`; événements synthétiques et permission à tester | `SPIKE`; mécanisme X11 à choisir | `LIMITÉ`; seulement voies explicitement autorisées |
-| Copie du résultat | `FALLBACK` candidat | `FALLBACK` candidat | `FALLBACK` candidat | `FALLBACK` principal candidat |
+| Copie du résultat | `FALLBACK` | `FALLBACK` | `FALLBACK` | `FALLBACK` principal |
 | Collage manuel guidé | `FALLBACK` | `FALLBACK` | `FALLBACK` | `FALLBACK` obligatoire si aucune injection autorisée |
 | Texte brut récupérable | `CIBLE` proposée | `CIBLE` proposée | `CIBLE` proposée | `CIBLE` proposée |
 | ASR local CPU | `SPIKE` moteur/modèle/matériel | `SPIKE` moteur/modèle/matériel | `SPIKE` moteur/modèle/matériel | `SPIKE` moteur/modèle/matériel |
-| Accélération locale | `SPIKE`; backend à choisir | `SPIKE`; Apple Silicon candidat | `SPIKE`; matériel/pilotes à borner | `SPIKE`; matériel/pilotes à borner |
-| Fonctionnement hors ligne | `OUVERT` D-09/D-10 | `OUVERT` | `OUVERT` | `OUVERT` |
+| Accélération locale | `SPIKE`; backend à choisir | `SPIKE`; référence Apple Silicon | `SPIKE`; matériel/pilotes à borner | `SPIKE`; matériel/pilotes à borner |
+| Fonctionnement hors ligne | `CONFIRMÉ`, test requis | `CONFIRMÉ`, test requis | `CONFIRMÉ`, test requis | `CONFIRMÉ`, test requis |
 | Stockage local SQLite | `CIBLE` proposée | `CIBLE` proposée | `CIBLE` proposée | `CIBLE` proposée |
 | Lancement automatique/tray | `HORS MVP` ou `SPIKE` selon parcours | `HORS MVP` ou `SPIKE` | `HORS MVP` ou `SPIKE` | `HORS MVP` ou `SPIKE` |
 | Packaging signé | `HORS MVP`, requis avant bêta publique | `HORS MVP`, requis avant bêta publique | `HORS MVP`; formats à décider | `HORS MVP`; formats à décider |
@@ -62,14 +64,14 @@ Une plateforme n'est « supportée » que si les éléments suivants sont nommé
 
 Le produit ne doit pas réduire la remise à un booléen « injection supportée ».
 
-| Niveau | Résultat | Exigence candidate |
+| Niveau | Résultat | Exigence cible |
 |---|---|---|
 | L0 — résultat interne | le texte brut est visible/récupérable dans Fluent | aucun texte produit ne disparaît |
 | L1 — copie | Fluent place le texte dans le presse-papiers après action/consentement défini | état explicite; risque presse-papiers documenté |
 | L2 — collage automatisé | Fluent tente un collage dans une cible revalidée | permission et focus vérifiés; timeout borné |
 | L3 — insertion native | Fluent utilise une API d'accessibilité ou d'édition adaptée | seulement pour applications/OS prouvés; pas d'universalité |
 
-Le MVP candidat accepte L2 sur les environnements prouvés et retombe vers L1/L0. Sous Wayland, L1/L0 doivent être considérés comme des comportements normaux, pas comme une erreur exceptionnelle.
+Le MVP accepte L2 sur les environnements prouvés et retombe vers L1/L0. Sous Wayland, L1/L0 doivent être considérés comme des comportements normaux, pas comme une erreur exceptionnelle.
 
 ### Garde-fous presse-papiers proposés
 
@@ -102,7 +104,7 @@ Dégradation proposée: si la cible ne peut pas être revalidée ou si son nivea
 
 Points à prouver:
 
-- versions macOS et architectures Intel/Apple Silicon retenues;
+- versions macOS et architectures supportées, avec Apple Silicon comme référence conditionnelle;
 - permission microphone, Input Monitoring et Accessibility selon mécanisme exact;
 - comportement des event taps/hotkeys, perte de key-up et Secure Input;
 - focus entre applications, Spaces, plein écran et bureaux;
@@ -152,32 +154,31 @@ contrôle UI ou hotkey disponible
 
 Cette dégradation doit être testée comme un parcours de premier rang.
 
-## 6. Matrice local/Cloud candidate
+## 6. Matrice local/Cloud confirmée pour le MVP
 
-| Capacité | Local candidat | Cloud candidat | MVP |
+| Capacité | Local | Ports ou futur Cloud | MVP |
 |---|---|---|---|
-| capture | obligatoire sur l'appareil | aucune capture distante directe | proposé |
-| ASR | moteur local initial | fournisseur derrière une passerelle explicite | D-10 ouverte |
-| réécriture | déterministe ou moteur local futur | LLM opt-in avec brut préservé | hors MVP candidat |
+| capture | obligatoire sur l'appareil | aucune capture distante directe | confirmé |
+| ASR | moteur local initial | port sans implémentation distante | local uniquement au MVP |
+| réécriture | déterministe ou moteur local futur | futur service opt-in avec brut préservé | hors MVP |
 | dictionnaire | local | synchronisation optionnelle | V1/ultérieur |
-| historique | local selon D-08 | synchronisation selon D-08/D-10 | ouvert/hors MVP candidat |
-| compte | aucun pour le chemin local proposé | nécessaire seulement aux fonctions distantes | D-09 ouverte |
+| historique | zero-history par défaut; texte local opt-in à rétention configurable | synchronisation future facultative et payante | historique local en V1 proposée; Cloud hors MVP |
+| compte | aucun pour installer ou utiliser le chemin local | futur compte limité aux fonctions distantes | aucun compte au MVP |
 | diagnostics | local expurgé | envoi opt-in et minimisé | threat model requis |
-| modèles | fichiers locaux avec intégrité | manifestes/téléchargement via distribution | proposé |
+| modèles | fichiers locaux avec intégrité | manifestes/téléchargement de distribution, sans service métier Cloud | confirmé pour le local |
 
 ## 7. Ordre des plateformes
 
-L'ordre réel reste D-04. L'ordre des phases macOS -> Linux -> Windows dans la roadmap ne constitue pas à lui seul une décision produit.
+D-04 confirme l'ordre produit **macOS -> Linux -> Windows**. D-03 fixe macOS Apple Silicon comme référence si une machine de test est disponible; à défaut, Windows devient la référence pratique pour les premiers benchmarks. La disponibilité réelle de la machine Apple Silicon doit donc être établie avant de choisir l'environnement d'exécution du premier lot. Ce fallback de référence ne modifie pas à lui seul l'ordre produit D-04.
 
-Critères d'arbitrage proposés:
+L'extension respecte les contraintes suivantes:
 
-1. concentration du persona principal par OS;
-2. disponibilité des machines et responsables de test;
-3. capacité à établir une baseline CPU sans accélérateur;
-4. coût des permissions, du packaging et de la signature;
-5. risque d'injection et qualité du fallback;
-6. possibilité de réutiliser les contrats sans fausse parité;
-7. éventuelle base WPF externe établie par D-14.
+1. qualifier d'abord le parcours macOS de référence si la machine Apple Silicon est disponible, sinon utiliser Windows comme référence pratique;
+2. traiter Linux X11 et Wayland comme deux environnements distincts et tester L1/L0 comme fallback de premier rang;
+3. étendre ensuite à Windows sans retarder la stabilisation des contrats communs;
+4. garder une baseline CPU sans GPU dédié obligatoire;
+5. réutiliser les contrats sans prétendre à une fausse parité;
+6. rester greenfield; toute base WPF externe découverte exige inventaire et nouvel ADR.
 
 ## 8. Spikes de Phase 02 nécessaires
 

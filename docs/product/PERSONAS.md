@@ -1,26 +1,27 @@
 # Personas de cadrage
 
-Statut: **hypothèses à valider**
+Statut: **persona principal confirmé — hypothèses d'usage à valider**
 
-Décision liée: `D-02 — utilisateur cible principal`
+Décision liée: `D-02 — CONFIRMÉE le 2026-08-09`
 
 Référence: [VISION.md](VISION.md)
 
 ## 1. Règle d'usage
 
-Ces personas structurent la recherche et les scénarios de test. Ils ne sont pas des segments confirmés: aucun entretien, volume de marché, usage observé ou volonté de payer n'est encore versionné dans le dépôt.
+Le persona principal est confirmé par D-02: **professionnel desktop à forte production écrite, sensible à la confidentialité**. Les profils secondaires structurent la recherche et les scénarios de test; ils ne constituent pas de nouvelles cibles confirmées.
 
-La Phase 00 doit sélectionner un persona principal et documenter les preuves. Tant que D-02 reste ouverte, le backlog ne doit pas transformer l'un de ces profils en vérité produit.
+Cette priorisation est une décision produit, pas une preuve de fréquence, de gain, de volume de marché ou de volonté de payer. Ces hypothèses restent à vérifier par observation et tests sans rouvrir silencieusement D-02.
 
-## 2. Persona candidat A — professionnel desktop à forte production écrite
+## 2. Persona principal confirmé — professionnel desktop à forte production écrite, sensible à la confidentialité
 
-**Rôle hypothétique:** développeur, consultant, chef de projet, créateur ou opérateur qui rédige plusieurs fois par jour dans plusieurs applications.
+**Rôle cible:** développeur, consultant, chef de projet, créateur ou opérateur qui rédige plusieurs fois par jour dans plusieurs applications et souhaite garder le contrôle de données potentiellement sensibles.
 
 ### Situation
 
 - alterne IDE, navigateur, messagerie, documents et outils de suivi;
 - veut accélérer brouillons, réponses, notes et prompts;
 - peut travailler avec une connexion instable;
+- manipule des textes confidentiels, personnels ou contractuels qui ne doivent pas partir par défaut vers un tiers;
 - refuse qu'un échec d'insertion fasse perdre ce qui vient d'être dicté.
 
 ### Besoins supposés
@@ -30,7 +31,9 @@ La Phase 00 doit sélectionner un persona principal et documenter les preuves. T
 - raccourci configurable et non conflictuel;
 - latence prévisible sur son matériel réel;
 - dictionnaire de noms propres et termes métier;
-- transparence sur le traitement local ou distant.
+- transparence sur le traitement local ou distant;
+- chemin local utilisable sans compte ni réseau;
+- politique de rétention lisible et suppression contrôlable.
 
 ### Frictions à tester
 
@@ -46,7 +49,8 @@ La Phase 00 doit sélectionner un persona principal et documenter les preuves. T
 2. Dicter un paragraphe dans un document riche.
 3. Dicter un prompt ou commentaire de code contenant noms propres et termes anglais/français.
 4. Perdre le focus avant la remise et récupérer le texte sans redicter.
-5. Utiliser le produit hors ligne, si D-09/D-10 le confirment.
+5. Utiliser le produit hors ligne et sans compte.
+6. Identifier ce qui est gardé localement avec le zero-history par défaut, puis activer et purger volontairement l'historique texte configurable lorsqu'il existe.
 
 ### Signal de confirmation proposé
 
@@ -55,9 +59,9 @@ La Phase 00 doit sélectionner un persona principal et documenter les preuves. T
 - importance déclarée et démontrée du local ou du fallback;
 - matériel représentatif disponible pour les benchmarks.
 
-## 3. Persona candidat B — utilisateur sensible à la confidentialité
+## 3. Axe de recherche prioritaire — confidentialité
 
-**Rôle hypothétique:** professionnel manipulant des données confidentielles, personnelles ou contractuelles, sans supposer une conformité réglementaire non démontrée.
+La sensibilité à la confidentialité fait partie du persona principal D-02; elle n'est pas un persona secondaire optionnel. Les comportements ci-dessous restent à observer sans supposer une conformité réglementaire non démontrée.
 
 ### Situation
 
@@ -73,27 +77,27 @@ La Phase 00 doit sélectionner un persona principal et documenter les preuves. T
 - indicateur de capture impossible à confondre;
 - politique de rétention lisible et suppression contrôlable;
 - diagnostics sans contenu dicté;
-- fonctionnement utile sans compte, si D-09 le confirme.
+- fonctionnement utile sans compte;
 
 ### Frictions à tester
 
 - confusion entre « local-first », « mode local » et « aucune donnée ne sort »;
 - permissions d'accessibilité trop larges par rapport au besoin;
 - exposition par presse-papiers, fichiers temporaires, logs ou historique;
-- impossibilité de faire approuver une application non signée ou un dépôt public sans licence claire.
+- impossibilité de faire approuver une application non signée ou dont les dépendances et modèles ne sont pas compatibles avec Apache-2.0.
 
 ### Scénarios de validation
 
 1. Identifier avant la première dictée ce qui est local, stocké ou transmis.
 2. Refuser une permission et comprendre la capacité perdue.
 3. Effacer les données locales et vérifier le résultat.
-4. Activer volontairement une option distante, puis revenir au chemin local.
+4. Vérifier que le MVP n'expose aucune opération distante et que ses ports Cloud n'ont pas d'implémentation.
 
 ### Limite
 
 Ce persona ne permet pas de revendiquer une conformité médicale, juridique, financière ou sectorielle. Une telle cible exigerait des exigences et preuves dédiées.
 
-## 4. Persona candidat C — utilisateur de Linux sous environnements variés
+## 4. Profil secondaire de compatibilité — utilisateur Linux sous environnements variés
 
 **Rôle hypothétique:** utilisateur technique sur Linux X11 ou Wayland, disposé à accepter une dégradation documentée mais pas une promesse fausse.
 
@@ -129,20 +133,20 @@ Ce persona ne permet pas de revendiquer une conformité médicale, juridique, fi
 
 ## 5. Persona ultérieur — administrateur d'organisation
 
-**Hors MVP candidat.** Un responsable IT voudrait déployer, configurer et auditer Fluent sur un parc. Ses besoins potentiels sont signature, mises à jour contrôlées, politiques de réseau/rétention, inventaire de versions, SSO et support.
+**Hors MVP.** Un responsable IT voudrait déployer, configurer et auditer Fluent sur un parc. Ses besoins potentiels sont signature, mises à jour contrôlées, politiques de réseau/rétention, inventaire de versions, SSO et support.
 
-Ce persona n'est activé que si D-02 et D-13 établissent un segment entreprise. Il ne justifie pas un backend, SSO ou une télémétrie dans le MVP.
+Ce persona n'est activé qu'après validation d'un segment entreprise et d'un cadrage économique dédié. D-13 réserve les services Cloud/synchronisation futurs à une offre facultative payante; il ne justifie pas un backend, SSO ou une télémétrie dans le MVP.
 
 ## 6. Anti-personas et non-objectifs
 
-- utilisateur attendant une écoute ambiante permanente avant décision D-07;
+- utilisateur attendant une écoute ambiante permanente au MVP;
 - organisation exigeant une certification ou un déploiement on-premise non cadré;
 - utilisateur mobile comme cible MVP;
 - utilisateur exigeant l'injection universelle sous tout compositor;
 - personne dépendant du produit comme dispositif médical ou d'accessibilité critique;
 - équipe ayant besoin d'une collaboration temps réel ou d'un historique audio partagé.
 
-## 7. Plan de recherche pour décider D-02
+## 7. Plan de recherche pour valider les hypothèses du persona D-02
 
 | Étape | Preuve attendue | Évite de conclure à partir de |
 |---|---|---|
@@ -150,7 +154,7 @@ Ce persona n'est activé que si D-02 et D-13 établissent un segment entreprise.
 | 2. observer les tâches actuelles | applications, fréquence, durée, corrections et échecs | préférence déclarée pour « l'IA » |
 | 3. tester la proposition | arbitrage vitesse/précision/local/ressources | intention d'essai sans usage réel |
 | 4. tester les risques | réaction aux permissions, au fallback et à la rétention | compréhension supposée des termes techniques |
-| 5. sélectionner le persona principal | décision D-02 datée avec critères | taille de marché non sourcée |
+| 5. vérifier la priorité retenue | synthèse datée des signaux qui confortent ou contredisent D-02 | taille de marché non sourcée |
 
 Questions minimales:
 
@@ -158,16 +162,17 @@ Questions minimales:
 - quels types d'erreurs coûtent le plus: reconnaissance, formatage, focus, perte du texte ou confidentialité?
 - quel délai après la parole reste acceptable?
 - quelle machine et quel système sont réellement utilisés?
-- qu'est-ce qui interdirait le Cloud, un compte, une permission d'accessibilité ou un historique?
+- quelles contraintes pèseraient sur une option Cloud future, un compte réservé aux services distants, une permission d'accessibilité ou un historique texte opt-in?
 - le fallback « copier puis coller soi-même » reste-t-il utile et compréhensible?
 
-## 8. Décision attendue
+## 8. Décision enregistrée et preuves restantes
 
-D-02 doit nommer:
+D-02 nomme le professionnel desktop à forte production écrite, sensible à la confidentialité, comme persona principal. La confirmation utilisateur est datée du 2026-08-09 et tracée dans `CYCLE-20260809-02`.
 
-- un persona principal;
-- un problème prioritaire observable;
+La recherche doit encore documenter:
+
+- le problème prioritaire observable;
 - les applications et environnements les plus fréquents;
 - le compromis accepté entre latence, précision et ressources;
-- les contraintes de confidentialité;
-- un critère qui invaliderait le segment.
+- les contraintes de confidentialité concrètes;
+- un signal qui imposerait un nouvel arbitrage du segment.

@@ -1,6 +1,6 @@
 # Backlog produit initial
 
-Statut: **priorisation proposée**
+Statut: **décisions produit confirmées — priorisation technique proposée**
 
 Phase: `PHASE-00`
 
@@ -11,6 +11,7 @@ Références: [VISION.md](VISION.md), [PRD-MVP.md](PRD-MVP.md), [PLATFORM-CAPABI
 - `P0`: nécessaire pour fermer le cadrage ou rendre le premier parcours démontrable;
 - `P1`: nécessaire à une V1 crédible après le MVP;
 - `P2`: ultérieur, conditionné par preuves d'usage;
+- `DONE`: décision ou livrable acquis avec preuve;
 - `BLOCKED`: une décision ou preuve externe manque;
 - `READY`: contrat et critères suffisants pour planifier un lot;
 - `DISCOVERY`: recherche ou spike borné, sans engagement produit.
@@ -21,20 +22,20 @@ Le backlog n'autorise pas à lui seul l'implémentation. Le manager ouvre chaque
 
 | ID | Élément | Sortie vérifiable | Dépendance | État |
 |---|---|---|---|---|
-| DEC-001 | décider le nom définitif | D-01 datée, vérification marque/domaine séparée si publication | sponsor | `BLOCKED` |
-| DEC-002 | choisir le persona principal | D-02 + preuves d'entretiens/tâches | recherche utilisateurs | `BLOCKED` |
-| DEC-003 | choisir plateforme de référence | OS, version, architecture et machine nommés | D-02, parc de test | `BLOCKED` |
-| DEC-004 | décider l'ordre des OS | ordre et justification par usage/risque/coût | D-02/D-03 | `BLOCKED` |
-| DEC-005 | décider langues MVP | langues, locales, corpus et normalisation | D-02 | `BLOCKED` |
-| DEC-006 | décider matériel minimal | CPU, RAM, architecture, stockage, accélérateur requis ou non | D-03/D-05 | `BLOCKED` |
-| DEC-007 | choisir interaction de capture | push-to-talk/toggle/continue, comportement key-up et accessibilité | test UX | `BLOCKED` |
-| DEC-008 | approuver politique d'historique | catégories, valeurs par défaut, durées, suppression et audio temporaire | threat model | `BLOCKED` |
-| DEC-009 | décider obligation de compte | matrice fonctions anonymes/authentifiées | D-02/D-13 | `BLOCKED` |
-| DEC-010 | décider Cloud dans le MVP | absent/optionnel et flux autorisés | D-08/D-09, coûts | `BLOCKED` |
-| DEC-011 | décider visibilité du dépôt | public/privé et traitement de l'historique public actuel | sponsor/sécurité | `BLOCKED`; dépôt actuellement public |
-| DEC-012 | choisir la licence | licence code + politique contributions/dépendances | D-011/D-13, conseil si nécessaire | `BLOCKED`; aucune licence détectée |
-| DEC-013 | choisir le modèle économique | gratuit, achat, abonnement ou hybride; hypothèses de coûts | D-02/D-09/D-10 | `BLOCKED` |
-| DEC-014 | statuer sur l'application WPF | source/inventaire ou confirmation greenfield | accès externe éventuel | `BLOCKED`; aucun artefact WPF dans ce dépôt |
+| DEC-001 | décider le nom définitif | **Fluent**; vérification marque/domaine séparée avant publication | confirmation utilisateur du 2026-08-09 | `DONE` — D-01 confirmée |
+| DEC-002 | choisir le persona principal | professionnel desktop à forte production écrite, sensible à la confidentialité | confirmation utilisateur; hypothèses d'usage à valider | `DONE` — D-02 confirmée |
+| DEC-003 | choisir plateforme de référence | macOS Apple Silicon si une machine de test est disponible; sinon Windows comme référence pratique | disponibilité du parc à établir | `DONE` — D-03 confirmée; machine ou fallback à enregistrer |
+| DEC-004 | décider l'ordre des OS | macOS -> Linux -> Windows | D-02/D-03 confirmées | `DONE` — D-04 confirmée |
+| DEC-005 | décider langues MVP | français; termes anglais/code dans le corpus sans promesse bilingue | corpus et normalisation à versionner | `DONE` — D-05 confirmée |
+| DEC-006 | décider matériel minimal | minimum provisoire 4 cœurs modernes, 8 Gio, 2 Gio libres, sans GPU dédié; référence 16 Gio | benchmarks Phase 02 | `DONE` — D-06 confirmée; qualification provisoire |
+| DEC-007 | choisir interaction de capture | push-to-talk par défaut, toggle accessible, aucune écoute continue au MVP | faisabilité hotkey/release et a11y à prouver | `DONE` — D-07 confirmée |
+| DEC-008 | approuver politique d'historique | zero-history par défaut; texte local opt-in à rétention configurable; aucun audio persisté par défaut | threat model et contrôles de purge | `DONE` — D-08 confirmée |
+| DEC-009 | décider obligation de compte | aucun compte requis pour installer ou utiliser le chemin local | tests offline | `DONE` — D-09 confirmée |
+| DEC-010 | décider Cloud dans le MVP | absent; contrats/ports seulement, sans implémentation distante | tests de frontière réseau | `DONE` — D-10 confirmée |
+| DEC-011 | décider visibilité du dépôt | dépôt public | revue sécurité de l'historique | `DONE` — D-11 confirmée |
+| DEC-012 | choisir la licence | Apache-2.0 pour le code; licences propres pour modèles, données et marques | licence matérialisée par le manager; revue des dépendances | `DONE` — D-12 confirmée |
+| DEC-013 | choisir le modèle économique | cœur local gratuit; futurs Cloud/sync facultatifs payants | frontière commerciale future | `DONE` — D-13 confirmée |
+| DEC-014 | statuer sur l'application WPF | greenfield; aucune migration sans dépôt ou inventaire fourni | nouvel ADR si une source externe apparaît | `DONE` — D-14 confirmée |
 | GOV-001 | approuver les budgets MVP | seuils, méthode et propriétaire pour chaque métrique | DEC-003/005/006 | `BLOCKED` |
 | GOV-002 | threat model v0 | flux, actifs, menaces, mesures et risques résiduels | DEC-007/008/009/010 | `BLOCKED` |
 | GOV-003 | gate Phase 00 | chaque critère pointe vers une preuve | DEC-001..014, GOV-001/002 | `BLOCKED` |
@@ -57,18 +58,18 @@ Ces éléments deviennent `READY` seulement après les décisions qu'ils citent.
 | QA-001 | harness de budgets | mesures monotones, profils machine, p50/p95 et artefacts | GOV-001 | D2 |
 | SEC-001 | revue supply-chain initiale | dépendances et modèles compatibles, lockfiles et provenance | DEC-012, choix techniques | D2 |
 
-## 4. P0 — parcours MVP candidat
+## 4. P0 — parcours MVP
 
 | ID | User story / capacité | Critères principaux | Dépendances | État |
 |---|---|---|---|---|
 | MVP-001 | configurer microphone, modèle et langue | validation locale, erreurs récupérables, persistance définie | SPIKE-001/002/006 | `BLOCKED` |
 | MVP-002 | déclencher et visualiser une dictée | états accessibles, budget d'armement, aucun focus volé | SPIKE-003/004 | `BLOCKED` |
-| MVP-003 | transcrire localement | budget ASR approuvé et mode offline testé si confirmé | SPIKE-001/002 | `BLOCKED` |
+| MVP-003 | transcrire localement | budget ASR approuvé et mode offline testé sans compte | SPIKE-001/002 | `BLOCKED` |
 | MVP-004 | remettre le texte | voie compatible + L1/L0; cible revalidée | SPIKE-005 | `BLOCKED` |
 | MVP-005 | récupérer après échec | texte brut copiable dans 100 % des cas où il existe | MVP-003/004 | `BLOCKED` |
 | MVP-006 | diagnostiquer permission/périphérique/modèle | cause, impact et action sans contenu sensible | GOV-002, spikes | `BLOCKED` |
 | MVP-007 | supprimer données et modèles | comportement conforme à D-08, espace libéré vérifié | SPIKE-006/007 | `BLOCKED` |
-| MVP-008 | démonstration E2E de référence | parcours PRD + budgets + fallback + réseau coupé selon D-10 | MVP-001..007 | `BLOCKED` |
+| MVP-008 | démonstration E2E de référence | parcours PRD + budgets + fallback + réseau coupé, sans compte ni Cloud | MVP-001..007 | `BLOCKED` |
 
 ## 5. P1 — V1 proposée
 
@@ -77,11 +78,11 @@ Ces éléments deviennent `READY` seulement après les décisions qu'ils citent.
 | V1-001 | deuxième puis troisième plateforme | demande du persona et machine de test disponible | adaptateurs isolés; ne pas dégrader la référence |
 | V1-002 | dictionnaire personnel | erreurs de noms propres fréquentes et mesurées | désactivation par profil; brut intact |
 | V1-003 | profils par application | formatage répétitif observé | profil explicite; défaut neutre |
-| V1-004 | historique textuel local | valeur supérieure au risque selon D-08 | désactivable, purge/migration testées |
+| V1-004 | historique textuel local | opt-in explicite avec rétention configurable, le défaut restant zero-history | désactivable, purge/migration testées |
 | V1-005 | réécriture optionnelle | besoin mesuré et mécanisme d'évaluation | diff/fallback déterministe vers brut |
 | V1-006 | accélération matérielle | gain significatif sur profils nommés | backend CPU conservé lorsque viable |
 | V1-007 | packaging et mises à jour signées | canal bêta et clés gérées | canal/version précédente conservés |
-| V1-008 | Cloud facultatif | D-09/D-10/D-13 + threat model + budget | feature flag et chemin local indépendant |
+| V1-008 | Cloud/synchronisation futurs payants | nouveau cadrage produit + threat model + budget | facultatifs, feature flag et chemin local indépendant sans compte |
 | V1-009 | accessibilité complète | audit widget/dashboard/parcours erreurs | repli vers contrôles standards |
 
 ## 6. P2 — ultérieur
@@ -106,17 +107,17 @@ Ces éléments deviennent `READY` seulement après les décisions qu'ils citent.
 | matériel faible insuffisant | RTF/mémoire sans profil machine | DEC-006 + SPIKE-002 |
 | perte par réécriture | texte final remplace le brut sans trace | V1-005 interdit tant que fallback non prouvé |
 | fuite clipboard/contexte | lecture/restauration implicite | GOV-002 + SPIKE-005 |
-| backend prématuré | infrastructure distribuée avant D-10/charge | V1-008, FUT-007 conditionnés |
-| statut public sans licence | contributions/réutilisation ambiguës | DEC-011/012 avant ouverture organisée |
-| fausse migration WPF | plan basé sur une base absente du dépôt | DEC-014 avant tout lot migration |
+| backend prématuré | implémentation distante au MVP ou infrastructure distribuée avant besoin mesuré | V1-008, FUT-007 conditionnés |
+| incompatibilité Apache-2.0 | dépendance, modèle ou actif redistribué sous termes incompatibles | SEC-001 + revue avant intégration |
+| source WPF externe découverte tardivement | données ou core réutilisables révélés après fondation | inventaire borné + nouvel ADR; aucune migration implicite |
 
 ## 8. Ordre recommandé du prochain travail
 
-1. Fermer D-01 à D-14, en priorité D-02 à D-10 pour le PRD.
-2. Nommer plateforme, matériel, langues, corpus et budgets.
-3. Valider threat model v0 et rétention.
-4. Fermer Gate 00 avec preuves.
-5. Figer les contrats en ARC-001.
+1. Établir la disponibilité et l'identité de la machine macOS Apple Silicon de référence; à défaut, enregistrer Windows comme référence pratique.
+2. Versionner corpus français, normalisation et budgets provisoires.
+3. Valider threat model v0 et contrôles de rétention/suppression selon D-08 à D-10.
+4. Laisser le manager réévaluer et fermer le Gate 00 avec preuves.
+5. Après autorisation explicite de la phase suivante, figer les contrats en ARC-001.
 6. Exécuter les spikes de risque avant l'implémentation parallèle.
 7. Construire une seule tranche E2E sur la plateforme de référence.
-8. Étendre seulement après résultats mesurés et revue des fallbacks.
+8. Étendre vers Linux puis Windows seulement après résultats mesurés et revue des fallbacks.
