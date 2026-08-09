@@ -25,3 +25,11 @@
   texte local est opt-in avec retention configurable; aucun audio ne persiste.
   Ces choix produit ne sont pas des resultats de benchmark: tous les seuils
   restent candidats jusqu'aux prototypes Phase 02.
+- Phase 01 (cycle CYCLE-20260809-03): QA possede la CI, hygiene et documentation.
+  La CI doit rester une matrice minimale Ubuntu/macOS/Windows, permissions
+  `contents: read`, actions SHA-pinnees, Node 24.15.0, Rust 1.97.1, Corepack et
+  `pnpm install --frozen-lockfile`, puis les quatre commandes racine contractuelles
+  `lint`, `test`, `check`, `build`. Les runners GitHub et la validation de l'union
+  avec les lots frontend/Rust sont la preuve d'execution complete; avant cette
+  union, limiter les preuves aux controles de structure et ne pas inventer de
+  resultat de build.
