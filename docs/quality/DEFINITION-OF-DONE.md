@@ -19,6 +19,9 @@ confirmee.
   conserves selon [MEASUREMENT-PLAN.md](MEASUREMENT-PLAN.md).
 - Aucun secret, audio, texte dicte, presse-papiers ni autre donnee sensible
   n'apparait dans code, fixtures, logs, captures ou artefacts.
+- Le parcours local MVP reste utilisable sans compte ni Cloud. Il demarre en
+  zero-history; tout historique est texte local, explicitement active et soumis
+  a retention/purge verifiees. Aucun audio n'est persiste.
 - Les erreurs sont actionnables : message utilisateur, fallback documente et
   diagnostic minimise. Aucune reussite d'injection ou de transcription n'est
   revendiquee sans oracle.
@@ -27,9 +30,12 @@ confirmee.
 
 ## DoD pour le pipeline local
 
-- Capture, hotkey et VAD sont couverts par fixtures deterministes et par une
-  campagne microphone; le callback ne fait ni I/O synchrone ni allocation ou
-  verrou bloquant evitable.
+- Le PTT est le parcours de capture par defaut et son toggle est couvert par un
+  test d'accessibilite. L'ecoute continue/VAD est hors MVP et ne peut etre
+  qualifiee que comme scenario exploratoire. Capture, hotkey et, si applicable,
+  VAD sont couverts par fixtures deterministes et par une campagne microphone;
+  le callback ne fait ni I/O synchrone ni allocation ou verrou bloquant
+  evitable.
 - La perte d'echantillons est mesuree par sequences de trames, pas deduite de
   l'absence de plainte. Les trous et conditions de charge sont publies.
 - ASR local est execute hors ligne avec le moteur, modele, quantification,
@@ -45,10 +51,10 @@ confirmee.
 
 | Plateforme | Preuve minimale | Fallback obligatoire |
 |---|---|---|
-| Windows | permission, hotkey, cible capturee/revalidee, insertion verifiee dans les cibles testees | clipboard et message lorsque focus/injection echoue |
 | macOS | permissions Microphone/Accessibilite expliquees, event path et insertion verifies | guidance de permission puis clipboard si necessaire |
 | Linux X11 | hotkey, cible et clipboard/injection verifies pour le serveur X cible | clipboard explicite quand la cible refuse l'insertion |
 | Linux Wayland | compositor et portals/capabilities declares; aucun support universel presume | clipboard prepare et instruction visible si aucune API autorisee |
+| Windows | permission, hotkey, cible capturee/revalidee, insertion verifiee dans les cibles testees | clipboard et message lorsque focus/injection echoue |
 
 La cible est consideree reussie seulement si le texte attendu est dans la bonne
 fenetre, une seule fois. Les applications securisees ou non cooperatives restent
@@ -60,6 +66,10 @@ supprimees.
 - Les campagnes de latence, RTF, CPU, RSS, demarrage, disque et pertes audio
   referencent le materiel de [PERFORMANCE-BUDGETS.md](PERFORMANCE-BUDGETS.md)
   et publient percentiles, unites, repetitions et artefacts bruts.
+- La baseline commence sur macOS Apple Silicon (MacBook Air M2 16 Gio propose
+  si disponible), puis Linux et Windows. Le plancher provisoire est 4 coeurs
+  modernes, 8 Gio RAM, 2 Gio libres et aucun GPU requis; 16 Gio est la
+  reference RAM.
 - Les seuils ne sont qualifiants qu'apres prototype. Avant cela, le livrable est
   la baseline reproductible et l'ecart a la cible proposee, jamais un « PASS »
   produit sans decision.

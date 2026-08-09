@@ -6,21 +6,25 @@ Ce document cadre les mesures de Fluent avant les prototypes. Les valeurs marque
 **cible MVP proposee** sont des hypotheses de produit et de QA : elles ne sont ni un
 engagement de release, ni un critere de gate acquis. Elles deviennent un seuil de
 gate seulement apres la validation des prototypes de la phase 02, le choix du
-moteur ASR et la designation du materiel de reference.
+moteur ASR et la qualification du materiel de reference par les prototypes
+ Phase 02.
 
 Les valeurs **cible optimale** servent a orienter les choix d'architecture. Une
 mesure qui ne peut pas encore etre figee est explicitement listee dans la derniere
 section; elle ne doit pas etre maquillee en succes ou echec de phase.
 
-La langue francaise des corpus, `HW-WIN`, `HW-MAC`, `HW-LNX` et le scenario
-local sans compte ni reseau sont des **candidats de mesure**, pas des decisions
-de support ou de perimetre confirmees. La plateforme/materiel de reference et
-les benchmarks dependent des decisions D-03 a D-06; langue, modele et parcours
-ASR restent dependants de D-05/D-06; l'inscription du chemin sans compte ni
-reseau dans le MVP depend de D-09/D-10. La baseline securite exige neanmoins
-que le chemin local confirme reste utilisable sans compte ni reseau apres
-acquisition volontaire du modele requis. Aucun resultat de cette matrice ne
-tranche ces decisions produit.
+Les decisions produit confirmees le 2026-08-09 fixent le francais pour le MVP,
+le chemin local sans compte ni Cloud, le PTT par defaut avec toggle accessible,
+zero historique par defaut et aucun audio persiste. La reference de mesure est
+macOS Apple Silicon; le poste propose est un MacBook Air M2 16 Gio lorsqu'il
+est disponible. Linux, puis Windows, suivent dans cet ordre de validation.
+
+Ces decisions ne valident aucun chiffre de ce document. `HW-MAC`, `HW-LNX` et
+`HW-WIN`, le moteur, le modele et les resultats restent a qualifier par les
+prototypes Phase 02. Le plancher provisoire est 4 coeurs modernes, 8 Gio RAM,
+2 Gio libres et aucun GPU requis; 16 Gio est la reference de RAM. La baseline
+securite exige que le chemin local confirme reste utilisable sans compte ni
+reseau apres acquisition volontaire du modele requis.
 
 ## Conventions communes
 
@@ -39,14 +43,17 @@ tranche ces decisions produit.
 
 ## Materiel de reference propose
 
-Ces configurations sont les **candidats** de reference. Les proprietaires
-plateforme et ASR les confirmeront ou les remplaceront pendant les prototypes.
+macOS Apple Silicon est la plateforme de reference confirmee. Le MacBook Air
+M2 16 Gio ci-dessous est le poste de test propose si disponible; ses versions
+OS, pilotes et conditions de test restent a figer par les prototypes Phase 02.
+Linux, puis Windows, sont executes apres la baseline macOS. Ces configurations
+ne sont pas des resultats de benchmark ni une garantie finale de support.
 
 | ID | Systeme et scenario requis | Configuration candidate | Pourquoi |
 |---|---|---|---|
-| HW-WIN | Windows 11 x64, secteur et batterie | portable Intel Core i5-1240P, 16 Go RAM, SSD NVMe, micro integre | reference x86 integree, sans GPU dedie |
-| HW-MAC | macOS sur Apple Silicon | MacBook Air M2, 16 Go RAM, SSD interne, micro integre | mesure Metal/unified memory et permissions macOS |
-| HW-LNX | Ubuntu LTS x86_64, GNOME | portable Ryzen 7 7840U, 16 Go RAM, SSD NVMe; session X11 puis Wayland | couvre audio et integrations X11/Wayland sans GPU dedie |
+| HW-MAC | macOS Apple Silicon | MacBook Air M2, 16 Gio RAM, SSD interne, micro integre, si disponible | reference de mesure confirmee; permissions et memoire unifiee |
+| HW-LNX | Ubuntu LTS x86_64, GNOME | portable Ryzen 7 7840U, 16 Gio RAM, SSD NVMe; session X11 puis Wayland | deuxieme ordre de validation, couvre X11/Wayland sans GPU dedie |
+| HW-WIN | Windows 11 x64, secteur et batterie | portable Intel Core i5-1240P, 16 Gio RAM, SSD NVMe, micro integre | troisieme ordre de validation x86, sans GPU dedie |
 
 Une reference n'est valable que si les versions OS, pilotes audio, mode
 d'alimentation et peripherique sont archives avec le resultat. Les tests de
@@ -59,10 +66,10 @@ pas de promesse de support exhaustif.
 |---|---|---:|---:|---|---|
 | Armement PTT | front descendant du raccourci physique jusqu'au premier bloc audio accepte par le pipeline; trace hotkey/audio monotone | <= 100 ms | <= 50 ms | p95; p99 <= 150 ms | HW-WIN, HW-MAC, HW-LNX X11; Wayland seulement si raccourci disponible |
 | Fin de parole PTT | relachement du raccourci jusqu'a la fermeture de capture et remise du dernier bloc au consommateur ASR | <= 150 ms | <= 75 ms | p95; p99 <= 250 ms | meme matrice que l'armement |
-| Fin de parole VAD | fin de la fenetre de silence configuree jusqu'a la remise ASR; le delai de silence configure est rapporte separement | <= 150 ms de surcout | <= 75 ms de surcout | p95; ms | plateformes/micro valides; fixture parole + silence |
-| Fin de parole -> texte brut disponible | fin de capture PTT ou point final VAD jusqu'au texte ASR brut conserve, affichable/copiable; distinct du flush et hors injection/reecriture | p50 <= 1.0 s; p95 <= 2.5 s pour 10 s de parole | p50 <= 0.5 s; p95 <= 1.0 s | p50/p95; s | scenario local candidat, corpus/langue/modele/HW declares |
+| Fin de parole VAD | fin de la fenetre de silence configuree jusqu'a la remise ASR; le delai de silence configure est rapporte separement | cible exploratoire, hors MVP sans ecoute continue | <= 75 ms de surcout si le prototype retient VAD | p95; ms | prototype uniquement, plateformes/micro valides; fixture parole + silence |
+| Fin de parole -> texte brut disponible | fin de capture PTT ou point final VAD jusqu'au texte ASR brut conserve, affichable/copiable; distinct du flush et hors injection/reecriture | p50 <= 1.0 s; p95 <= 2.5 s pour 10 s de parole | p50 <= 0.5 s; p95 <= 1.0 s | p50/p95; s | scenario local MVP; corpus francais/modele/HW declares |
 | RTF ASR local | `temps de decodage / duree audio` sur corpus fige; prechargement du modele declare | <= 1.00 | <= 0.35 | p95; ratio sans unite | chaque HW, moteur/modele/quantification explicites |
-| WER | distance de mots normalisee sur corpus de reference et normaliseur versionne | <= 12 % sur propre; <= 20 % sur bruit controle | <= 7 %; <= 12 % | point estimate + IC 95 %; % | corpus francais fige, chaque HW si le moteur varie |
+| WER | distance de mots normalisee sur corpus de reference et normaliseur versionne | <= 12 % sur propre; <= 20 % sur bruit controle | <= 7 %; <= 12 % | point estimate + IC 95 %; % | corpus francais MVP fige, chaque HW si le moteur varie |
 | CER | distance de caracteres normalisee sur le meme corpus | <= 5 % sur propre; <= 10 % sur bruit controle | <= 2.5 %; <= 5 % | point estimate + IC 95 %; % | meme corpus et normalisation que WER |
 | Injection reussie | texte final present une seule fois dans la cible correcte, sans substitution ni perte; test isole par application | >= 98 % Windows/macOS; >= 95 % X11 | >= 99.5 % partout ou injection est supportee | taux + IC binomial 95 % | applications cibles de `TEST-MATRIX.md` |
 | Fallback Wayland | quand l'injection universelle est indisponible : clipboard contient le texte, instruction visible, aucun faux succes | >= 99 % de preparation clipboard | >= 99.9 % | taux + IC binomial 95 % | HW-LNX Wayland, compositor identifie |
@@ -89,12 +96,14 @@ Les taux d'injection excluent les cibles qui refusent volontairement le collage
 ou l'accessibilite, mais ces exclusions doivent etre listees et testees comme
 cas de fallback. Elles ne peuvent pas augmenter artificiellement le taux.
 
-## Metriques non figables avant prototype
+## Elements techniques non figables avant prototype
 
-Les decisions suivantes conditionnent les valeurs de gate finales et restent
-ouvertes :
+Les elements techniques suivants conditionnent les valeurs de gate finales et
+restent a qualifier :
 
-- modele ASR par defaut, quantification, langues et acceleration CPU/GPU/Metal;
+- modele ASR par defaut, quantification et acceleration CPU/GPU/Metal; le
+  francais est confirme pour le MVP mais son corpus et son normaliseur restent
+  a qualifier;
 - algorithme VAD, seuil de silence, segmentation et definition UX de la
   « fin de parole » automatique;
 - corpus sous licence, protocoles de normalisation, repartition propre/bruitee

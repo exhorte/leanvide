@@ -12,12 +12,18 @@ Les mesures sont local-first. Les corpus et enregistrements restent locaux sauf
 consentement explicite documente; aucun audio, texte dicte, token ou contenu de
 presse-papiers ne va dans les logs de CI.
 
-Le francais, les candidats `HW-WIN`/`HW-MAC`/`HW-LNX` et le test local sans
-compte ni reseau sont des scenarios de cadrage, non une promesse de support.
-Leur choix depend de D-03 a D-06 et, pour le perimetre sans compte/reseau du
-MVP, de D-09/D-10. Une fois le modele local acquis volontairement, le test
-reseau coupe verifie l'invariant de securite du chemin local confirme; il ne
-decide pas a lui seul le perimetre produit.
+Le francais est la langue MVP confirmee. La campagne de reference commence sur
+macOS Apple Silicon, avec un MacBook Air M2 16 Gio propose si disponible, puis
+Linux et Windows. Le plancher provisoire est 4 coeurs modernes, 8 Gio RAM,
+2 Gio libres et aucun GPU requis; 16 Gio est la reference RAM. Ces choix de
+produit ne rendent ni les machines candidates ni les chiffres comparables
+qualifiants avant les prototypes Phase 02.
+
+Le chemin MVP est local, sans compte et sans Cloud. Une fois le modele local
+acquis volontairement, le test reseau coupe verifie cet invariant. Les mesures
+de capture couvrent le PTT par defaut et son toggle accessible; une ecoute
+continue/VAD ne constitue pas un parcours MVP et ne peut etre qualifiee qu'a
+titre exploratoire par les prototypes.
 
 ## Contrat d'une campagne
 
@@ -51,8 +57,8 @@ est marque invalide avec la cause.
 
 Avant chaque comparaison :
 
-1. Consigner la configuration materielle candidate `HW-WIN`, `HW-MAC` ou
-   `HW-LNX` de [PERFORMANCE-BUDGETS.md](PERFORMANCE-BUDGETS.md), plus les
+1. Consigner la configuration materielle `HW-MAC`, puis `HW-LNX` et `HW-WIN`,
+   de [PERFORMANCE-BUDGETS.md](PERFORMANCE-BUDGETS.md), plus les
    versions OS, noyau/compositor et pilotes.
 2. Fermer les processus non indispensables, desactiver les synchronisations et
    indiquer secteur/batterie, profil CPU et etat thermique.
@@ -73,7 +79,7 @@ dont les artefacts ci-dessus permettent de recalculer le resultat.
 |---|---|---|---|
 | Armement PTT | generer/observer le front `key_down`; journal monotone au premier bloc audio accepte | `t_audio_accepte - t_key_down` | trace des deux evenements, 30 essais |
 | Fin PTT | `key_up`, fermeture capture, dernier bloc remis ASR | `t_remise_asr - t_key_up` | trace de transition et configuration hotkey |
-| Fin VAD | fin de silence configuree, emission de fin de segment, remise ASR | surcout apres la fenetre de silence; rapporter le silence configure | fixture parole/silence + trace VAD |
+| Fin VAD exploratoire | fin de silence configuree, emission de fin de segment, remise ASR | surcout apres la fenetre de silence; rapporter le silence configure | fixture parole/silence + trace VAD; hors qualification MVP sans ecoute continue |
 | Fin -> texte brut disponible | fin de capture PTT (ou point final VAD), puis texte ASR brut conserve et affichable/copiable; ne pas attendre injection ni reecriture | `t_texte_brut_disponible - t_fin_capture`; 10 s de parole par essai, p50/p95 | fixture 10 s, trace etat `PROCESSING -> texte_brut_disponible`, corpus/modele/langue/HW hashes |
 | RTF | decoder le corpus WAV 16 kHz mono avec modele precharge puis froid declare | `temps_decode / secondes_audio` par fichier | resultats par fichier, hash corpus et modele |
 | WER/CER | reference textuelle et sortie ASR normalisees par la meme version de normaliseur | Levenshtein mot/caractere; bootstrap IC 95 % | hypotheses, sorties normalisees, script/version |
@@ -92,12 +98,13 @@ mesuree; sinon le resultat est indicatif, non qualifiant.
 ## Corpus, fixtures et verification d'exactitude
 
 Le futur corpus de reference doit etre versionne par manifeste, sans voix ou
-contenu prive. Le sous-corpus francais propre et bruit controle est un candidat
-dependant de D-05/D-06, pas une langue supportee confirmee; il doit etre
-remplace ou complete par les langues effectivement retenues. Il doit contenir
-ponctuation et vocabulaire hors dictionnaire. Les splits de developpement et de
-validation sont separes. Les corrections manuelles, dictionnaires ou
-reecritures sont des scenarios distincts : WER/CER ASR ne les melangent pas.
+contenu prive. Il couvre le francais MVP propre et bruit controle, avec
+ponctuation et vocabulaire hors dictionnaire. Son corpus, ses licences, ses
+splits et son normaliseur restent a qualifier par les prototypes Phase 02; la
+confirmation de la langue ne vaut ni corpus livre ni seuil d'exactitude valide.
+Les splits de developpement et de validation sont separes. Les corrections
+manuelles, dictionnaires ou reecritures sont des scenarios distincts : WER/CER
+ASR ne les melangent pas.
 
 Normalisation avant WER/CER : Unicode NFC, casse, espaces et ponctuation selon
 une specification versionnee; nombres, acronymes et contractions sont declares
@@ -140,8 +147,8 @@ QA execute les campagnes repetitives. Une commande qui reussit sans produire
 
 ## Couverture plateforme
 
-Chaque scenario applicable est execute sur Windows, macOS et Linux X11. Linux
-Wayland est une colonne distincte : le rapport declare le compositor et les
-capabilities detectees. Ne pas transformer l'impossibilite d'injecter en echec
-silencieux ni en support presume; executer et mesurer le fallback clipboard
-avec instruction utilisateur explicite.
+Chaque scenario applicable est execute d'abord sur macOS Apple Silicon, puis
+Linux X11 et enfin Windows. Linux Wayland est une colonne distincte : le rapport
+declare le compositor et les capabilities detectees. Ne pas transformer
+l'impossibilite d'injecter en echec silencieux ni en support presume; executer
+et mesurer le fallback clipboard avec instruction utilisateur explicite.

@@ -9,20 +9,24 @@ suivant [MEASUREMENT-PLAN.md](MEASUREMENT-PLAN.md). Les valeurs a atteindre sont
 des **cibles MVP proposees** dans
 [PERFORMANCE-BUDGETS.md](PERFORMANCE-BUDGETS.md), non des engagements confirmes.
 Le francais, les trois configurations `HW-*` et le parcours local sans compte ni
-reseau sont des candidats de validation dependants de D-03 a D-06 et D-09/D-10;
-ils ne confirment ni une plateforme, ni une langue, ni un perimetre MVP.
+reseau sont des decisions MVP confirmees. La reference de mesure est macOS
+Apple Silicon (MacBook Air M2 16 Gio propose si disponible), suivi de Linux
+puis Windows. Elles ne transforment pas les configurations candidates ni les
+cibles de [PERFORMANCE-BUDGETS.md](PERFORMANCE-BUDGETS.md) en resultats de
+benchmark ou engagements finaux avant les prototypes Phase 02.
 
 ## Axes de couverture
 
 | Axe | Valeurs minimales |
 |---|---|
-| OS | Windows 11 x64; macOS Apple Silicon; Ubuntu LTS x86_64 |
+| OS | macOS Apple Silicon (reference); Ubuntu LTS x86_64; Windows 11 x64 |
 | Session Linux | X11; Wayland, compositor/version declares |
 | Audio | micro integre; fixture WAV 16 kHz mono; peripherique USB en non-regression quand disponible |
-| Mode | candidat local hors ligne sans compte apres acquisition du modele; Cloud opt-in futur uniquement; PTT; toggle; VAD |
-| ASR | modele par defaut a confirmer; sous-corpus francais candidat; propre; bruit controle; dictionnaire desactive/active separement |
+| Materiel | plancher provisoire 4 coeurs modernes, 8 Gio RAM, 2 Gio libres, GPU non requis; reference 16 Gio |
+| Mode | local hors ligne sans compte apres acquisition du modele; Cloud absent MVP; PTT par defaut; toggle accessible; VAD/ecoute continue hors MVP et exploratoire seulement |
+| ASR | modele par defaut a confirmer; sous-corpus francais MVP a qualifier; propre; bruit controle; dictionnaire desactive/active separement |
 | Cible texte | editeur natif, navigateur, IDE, application non cooperative/securisee |
-| Etat | permission accordee/refusee, micro indisponible, cible detruite, clipboard occupe, modele absent/corrompu, reseau coupe |
+| Etat | permission accordee/refusee, micro indisponible, cible detruite, clipboard occupe, modele absent/corrompu, reseau coupe, historique texte opt-in/retention, aucun audio persiste |
 
 ## Cas de contrat
 
@@ -30,7 +34,7 @@ ils ne confirment ni une plateforme, ni une langue, ni un perimetre MVP.
 |---|---|---|---|---|---|---|
 | QA-AUD-01 | Armement PTT | requis | requis | requis | si hotkey autorise | premier bloc capture, trace p95/p99 |
 | QA-AUD-02 | Fin PTT et flush | requis | requis | requis | si hotkey autorise | dernier bloc remis, aucune capture orpheline |
-| QA-AUD-03 | Fin VAD | requis | requis | requis | requis si capture possible | surcout VAD et seuil de silence declares |
+| QA-AUD-03 | Fin VAD exploratoire, hors MVP | exploratoire | exploratoire | exploratoire | exploratoire si capture possible | surcout VAD et seuil de silence declares; aucun verdict MVP |
 | QA-AUD-04 | Continuite audio 10 min | requis | requis | requis | requis | sequence trames, taux/perte max |
 | QA-AUD-05 | Micro absent/silencieux/bascule | requis | requis | requis | requis | erreur visible, recovery borne, aucune boucle |
 | QA-ASR-01 | Decode local hors ligne | requis | requis | requis | requis | texte brut, RTF, modele declare |
@@ -46,7 +50,8 @@ ils ne confirment ni une plateforme, ni une langue, ni un perimetre MVP.
 | QA-SYS-01 | CPU/RSS arme, capture, ASR | requis | requis | requis | requis | serie 5 min, p95 par mode |
 | QA-SYS-02 | Demarrage chaud/froid | requis | requis | requis | requis | `ready` trace apres hotkey + UI disponibles |
 | QA-REL-01 | Crash/fault injection | requis | requis | requis | requis | reprise sure, sessions/crashes comptabilises |
-| QA-REL-02 | Confidentialite local-first | requis | requis | requis | requis | reseau coupe; aucune sortie audio/texte dans logs |
+| QA-REL-02 | Confidentialite local-first | requis | requis | requis | requis | reseau coupe; sans compte ni Cloud; aucune sortie audio/texte dans logs |
+| QA-REL-03 | Historique et retention | requis | requis | requis | requis | zero-history initial; historique texte seulement apres opt-in; aucun audio persiste; purge/retention verifiees |
 
 `capability dependant` n'est jamais interprete comme support universel. Pour
 Wayland, l'absence de droit d'injection passe `QA-WAY-01` et `QA-WAY-02` si le
@@ -77,7 +82,7 @@ restaure ni ne journalise le presse-papiers prive.
 | Latence, CPU, RSS, demarrage | 3 chauffes + 30 repetitions; 5 min pour ressources | p95/p99 contre budget et baseline |
 | Continuite audio | 3 x 10 min par peripherique | taux de trames perdues et trou maximal |
 | RTF | corpus versionne, 30 repetitions ou tous fichiers si plus grand | p95 ratio par fichier/sous-corpus |
-| Fin -> texte brut disponible | 30 repetitions de fixture 10 s par moteur/modele/langue/HW candidats | p50/p95, trace `fin_capture -> texte_brut_disponible`, hors injection/reecriture |
+| Fin -> texte brut disponible | 30 repetitions de fixture francaise MVP 10 s par moteur/modele/HW candidats | p50/p95, trace `fin_capture -> texte_brut_disponible`, hors injection/reecriture |
 | WER/CER | corpus valide versionne, bootstrap IC 95 % | score par sous-corpus + aggregate pondere |
 | Injection par cible | 100 essais par cible/capability au minimum de developpement | taux + IC 95 %, faux succes = echec |
 | Fallback Wayland | 100 essais par compositor/capability | clipboard + message, taux + IC 95 % |
@@ -87,9 +92,9 @@ restaure ni ne journalise le presse-papiers prive.
 
 | Phase | Preuve QA attendue |
 |---|---|
-| 01 Fondation | harnesses/fixtures prets ou plan de livraison trace; CI execute les controles disponibles |
-| 02 Prototypes | baseline materiel, capability map et valeurs figables mises a jour |
-| 04 Audio | QA-AUD-01 a 05, QA-SYS-01 avec artefacts |
+| 01 Fondation | harnesses/fixtures prets ou plan de livraison trace; CI execute les controles disponibles; parcours PTT/toggle local sans compte et aucune persistence audio specifies |
+| 02 Prototypes | baseline macOS Apple Silicon puis Linux/Windows, capability map et valeurs figables mises a jour; aucun seuil candidat ne passe sans artefact |
+| 04 Audio | QA-AUD-01, 02, 04 et 05, QA-SYS-01 avec artefacts; QA-AUD-03 seulement si un prototype retient VAD hors MVP |
 | 05 ASR | QA-ASR-01 a 03, RTF/WER/CER et tailles modeles |
 | 06 macOS | QA-INJ-01 a 04 macOS, permissions et fallback |
 | 07 Linux | X11 complet; QA-WAY-01/02, injection seulement quand capability prouvee |
