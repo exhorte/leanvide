@@ -8,6 +8,9 @@ Chaque execution joint la commande, l'environnement, la sortie et un artefact
 suivant [MEASUREMENT-PLAN.md](MEASUREMENT-PLAN.md). Les valeurs a atteindre sont
 des **cibles MVP proposees** dans
 [PERFORMANCE-BUDGETS.md](PERFORMANCE-BUDGETS.md), non des engagements confirmes.
+Le francais, les trois configurations `HW-*` et le parcours local sans compte ni
+reseau sont des candidats de validation dependants de D-03 a D-06 et D-09/D-10;
+ils ne confirment ni une plateforme, ni une langue, ni un perimetre MVP.
 
 ## Axes de couverture
 
@@ -16,8 +19,8 @@ des **cibles MVP proposees** dans
 | OS | Windows 11 x64; macOS Apple Silicon; Ubuntu LTS x86_64 |
 | Session Linux | X11; Wayland, compositor/version declares |
 | Audio | micro integre; fixture WAV 16 kHz mono; peripherique USB en non-regression quand disponible |
-| Mode | local hors ligne; Cloud opt-in futur uniquement; PTT; toggle; VAD |
-| ASR | modele par defaut a confirmer; langue francaise; propre; bruit controle; dictionnaire desactive/active separement |
+| Mode | candidat local hors ligne sans compte apres acquisition du modele; Cloud opt-in futur uniquement; PTT; toggle; VAD |
+| ASR | modele par defaut a confirmer; sous-corpus francais candidat; propre; bruit controle; dictionnaire desactive/active separement |
 | Cible texte | editeur natif, navigateur, IDE, application non cooperative/securisee |
 | Etat | permission accordee/refusee, micro indisponible, cible detruite, clipboard occupe, modele absent/corrompu, reseau coupe |
 
@@ -33,6 +36,7 @@ des **cibles MVP proposees** dans
 | QA-ASR-01 | Decode local hors ligne | requis | requis | requis | requis | texte brut, RTF, modele declare |
 | QA-ASR-02 | Exactitude propre/bruit | requis | requis | requis | requis | WER/CER par sous-corpus + IC |
 | QA-ASR-03 | Modele absent/corrompu/espace insuffisant | requis | requis | requis | requis | checksum, reprise/erreur, aucun usage partiel |
+| QA-ASR-04 | Fin -> texte brut disponible, 10 s | requis | requis | requis | requis | p50 <= 1.0 s, p95 <= 2.5 s; texte brut affichable/copiable avant injection/reecriture |
 | QA-INJ-01 | Editeur natif cible | requis | requis | requis | capability dependant | texte exact dans bonne fenetre, une seule fois |
 | QA-INJ-02 | Navigateur et IDE cible | requis | requis | requis | capability dependant | meme oracle, cible/focus revalides |
 | QA-INJ-03 | Cible detruite/focus change | requis | requis | requis | capability dependant | pas de texte dans mauvaise cible; fallback explicite |
@@ -73,10 +77,11 @@ restaure ni ne journalise le presse-papiers prive.
 | Latence, CPU, RSS, demarrage | 3 chauffes + 30 repetitions; 5 min pour ressources | p95/p99 contre budget et baseline |
 | Continuite audio | 3 x 10 min par peripherique | taux de trames perdues et trou maximal |
 | RTF | corpus versionne, 30 repetitions ou tous fichiers si plus grand | p95 ratio par fichier/sous-corpus |
+| Fin -> texte brut disponible | 30 repetitions de fixture 10 s par moteur/modele/langue/HW candidats | p50/p95, trace `fin_capture -> texte_brut_disponible`, hors injection/reecriture |
 | WER/CER | corpus valide versionne, bootstrap IC 95 % | score par sous-corpus + aggregate pondere |
 | Injection par cible | 100 essais par cible/capability au minimum de developpement | taux + IC 95 %, faux succes = echec |
 | Fallback Wayland | 100 essais par compositor/capability | clipboard + message, taux + IC 95 % |
-| Crash-free | >= 600 sessions eligibles sans crash pour preuve 99.5 % a IC 95 %; sinon resultat exploratoire | borne inferieure IC, pas seulement point estimate |
+| Crash-free | >= 600 sessions eligibles sans crash pour preuve 99.5 % a borne inferieure de Clopper-Pearson unilaterale 95 %; sinon resultat exploratoire | borne inferieure unilaterale, pas seulement point estimate |
 
 ## Gating
 

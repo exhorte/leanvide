@@ -35,6 +35,9 @@ confirmee.
 - ASR local est execute hors ligne avec le moteur, modele, quantification,
   corpus et normaliseur identifies. WER/CER et RTF separent decode, VAD et
   post-traitement/re-ecriture.
+- La mesure utilisateur `fin de parole -> texte brut disponible` est publiee
+  separement du flush PTT/VAD, de l'injection et de toute reecriture, avec le
+  scenario de 10 s, p50/p95, corpus, langue, modele et materiel declares.
 - En cas d'erreur de modele, de permission ou de micro, l'etat final est sur
   et comprehensible; aucune fuite audio vers le Cloud n'est possible par defaut.
 
@@ -64,7 +67,7 @@ supprimees.
   avant merge. Une regression qui fait franchir un budget de release est un
   `FAIL` sauf waiver avec responsable, date d'expiration et plan de retour.
 - Les sessions crash-free indiquent definition de session, taille d'echantillon,
-  intervalle de confiance et collecte consentie. L'absence de crash sur une
+  borne inferieure unilaterale a 95 % et collecte consentie. L'absence de crash sur une
   petite campagne ne prouve pas un taux de fiabilite.
 
 ## DoD CI, packaging et release

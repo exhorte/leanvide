@@ -12,6 +12,13 @@ Les mesures sont local-first. Les corpus et enregistrements restent locaux sauf
 consentement explicite documente; aucun audio, texte dicte, token ou contenu de
 presse-papiers ne va dans les logs de CI.
 
+Le francais, les candidats `HW-WIN`/`HW-MAC`/`HW-LNX` et le test local sans
+compte ni reseau sont des scenarios de cadrage, non une promesse de support.
+Leur choix depend de D-03 a D-06 et, pour le perimetre sans compte/reseau du
+MVP, de D-09/D-10. Une fois le modele local acquis volontairement, le test
+reseau coupe verifie l'invariant de securite du chemin local confirme; il ne
+decide pas a lui seul le perimetre produit.
+
 ## Contrat d'une campagne
 
 Chaque campagne cree un dossier immuable :
@@ -67,6 +74,7 @@ dont les artefacts ci-dessus permettent de recalculer le resultat.
 | Armement PTT | generer/observer le front `key_down`; journal monotone au premier bloc audio accepte | `t_audio_accepte - t_key_down` | trace des deux evenements, 30 essais |
 | Fin PTT | `key_up`, fermeture capture, dernier bloc remis ASR | `t_remise_asr - t_key_up` | trace de transition et configuration hotkey |
 | Fin VAD | fin de silence configuree, emission de fin de segment, remise ASR | surcout apres la fenetre de silence; rapporter le silence configure | fixture parole/silence + trace VAD |
+| Fin -> texte brut disponible | fin de capture PTT (ou point final VAD), puis texte ASR brut conserve et affichable/copiable; ne pas attendre injection ni reecriture | `t_texte_brut_disponible - t_fin_capture`; 10 s de parole par essai, p50/p95 | fixture 10 s, trace etat `PROCESSING -> texte_brut_disponible`, corpus/modele/langue/HW hashes |
 | RTF | decoder le corpus WAV 16 kHz mono avec modele precharge puis froid declare | `temps_decode / secondes_audio` par fichier | resultats par fichier, hash corpus et modele |
 | WER/CER | reference textuelle et sortie ASR normalisees par la meme version de normaliseur | Levenshtein mot/caractere; bootstrap IC 95 % | hypotheses, sorties normalisees, script/version |
 | Injection | cible connue, capture du texte final et verification egalite exacte | succes/nombre; IC binomial 95 % | log cible sans contenu sensible, capture/test oracle |
@@ -84,7 +92,9 @@ mesuree; sinon le resultat est indicatif, non qualifiant.
 ## Corpus, fixtures et verification d'exactitude
 
 Le futur corpus de reference doit etre versionne par manifeste, sans voix ou
-contenu prive. Il doit contenir au minimum francais propre, bruit controle,
+contenu prive. Le sous-corpus francais propre et bruit controle est un candidat
+dependant de D-05/D-06, pas une langue supportee confirmee; il doit etre
+remplace ou complete par les langues effectivement retenues. Il doit contenir
 ponctuation et vocabulaire hors dictionnaire. Les splits de developpement et de
 validation sont separes. Les corrections manuelles, dictionnaires ou
 reecritures sont des scenarios distincts : WER/CER ASR ne les melangent pas.
@@ -118,8 +128,9 @@ QA execute les campagnes repetitives. Une commande qui reussit sans produire
 - Un budget p95/p99 est respecte seulement si toutes les repetitions valides
   sont comptabilisees et si les preconditions correspondent a la ligne budget.
 - Un taux de succes publie son intervalle de confiance binomial. Pour etablir
-  99.5 % sans echec avec une borne inferieure a 95 %, il faut au moins 600
-  sessions eligibles; des dizaines d'essais ne suffisent pas.
+  99.5 % sans echec, il faut au moins 600 sessions eligibles et une borne
+  inferieure de Clopper-Pearson **unilaterale a 95 %**; avec zero crash, elle
+  vaut `0.05^(1/n)`. Des dizaines d'essais ne suffisent pas.
 - Les regressions sont comparees a une baseline du meme scenario; une derive
   >= 10 % sur latence, CPU, RSS ou RTF est signee puis examinee, sans attendre
   le depassement final du budget.
