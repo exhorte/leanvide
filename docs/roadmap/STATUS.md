@@ -5,7 +5,7 @@ Responsable: `project-manager`
 
 ## Phase active
 
-Aucune phase active. `PHASE-02` est `READY`; son cycle explicite reste a ouvrir.
+`PHASE-02` — `ACTIVE` (`CYCLE-20260809-04`)
 
 ## Tableau global
 
@@ -13,7 +13,7 @@ Aucune phase active. `PHASE-02` est `READY`; son cycle explicite reste a ouvrir.
 |---:|---|---:|---|---|---|
 | 00 | DONE | 100% | **PASS** | `docs/project-management/cycles/CYCLE-20260809-02.md`, acceptation utilisateur du 2026-08-09 | aucun |
 | 01 | DONE | 100% | **PASS** | `docs/project-management/cycles/CYCLE-20260809-03.md`, CI `31328840492` et `31329298017` | aucun |
-| 02 | READY | 0% | en attente | aucune | cycle explicite a ouvrir |
+| 02 | ACTIVE | 0% | en cours | `docs/project-management/cycles/CYCLE-20260809-04.md` | aucun; architecture et contrats en cours |
 | 03 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
 | 04 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
 | 05 | NOT_STARTED | 0% | verrouille | aucune | depend de 04 |
@@ -40,6 +40,7 @@ Aucune phase active. `PHASE-02` est `READY`; son cycle explicite reste a ouvrir.
 | 2026-08-09 | Cloture `COMPLETE` de PHASE-00 apres propagation, revue croisee et validation d'union | project-manager | `docs/project-management/cycles/CYCLE-20260809-02.md` |
 | 2026-08-09 | Fusion des cinq PR PHASE-00 dans `develop` et ouverture de PHASE-01 | project-manager | PR #1 a #5 fusionnees; `docs/project-management/cycles/CYCLE-20260809-03.md` |
 | 2026-08-09 | Cloture `COMPLETE` de PHASE-01 apres correction multiplateforme et deux matrices CI vertes | project-manager | PR #7 a #11; runs `31328840492` et `31329298017`; `docs/project-management/cycles/CYCLE-20260809-03.md` |
+| 2026-08-09 | Ouverture du cycle contracts-first de PHASE-02 | project-manager | `docs/project-management/cycles/CYCLE-20260809-04.md` |
 
 ## Evaluation du Gate 00
 
