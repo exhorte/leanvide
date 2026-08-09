@@ -1,14 +1,14 @@
 # Baseline securite et confidentialite
 
-Statut: **proposition d'exigences soumise a validation produit**. Elle ne ferme pas D-09 (compte obligatoire ou non) ni D-10 (Cloud present ou absent du MVP). Les termes **DOIT**, **NE DOIT PAS**, **DEVRAIT** et **PEUT** expriment la force proposee d'une exigence une fois son perimetre valide.
+Statut: **baseline Phase 00 alignee sur les decisions confirmees le 2026-08-09**. Les termes **DOIT**, **NE DOIT PAS**, **DEVRAIT** et **PEUT** expriment la force normative de l'exigence dans son perimetre.
 
 Cette baseline complete le [threat model](THREAT-MODEL-V0.md), les [flux](DATA-FLOWS.md) et la [classification](DATA-CLASSIFICATION.md). Elle ne remplace pas une notice juridique adaptee aux pays de distribution.
 
 ## Invariants produit
 
-1. Si D-09 et D-10 confirment un chemin local sans authentification ni reseau, ce chemin DOIT fonctionner apres acquisition volontaire du modele local requis.
+1. Le chemin local NE DOIT exiger aucun compte et DOIT fonctionner sans Cloud apres acquisition volontaire du modele local requis.
 2. Aucune donnee audio ou contextuelle NE DOIT quitter la machine sans consentement explicite, specifique, comprehensible et obtenu avant l'envoi.
-3. Un refus ou une revocation Cloud NE DOIT PAS degrader les fonctions qui ne dependent pas du service refuse; si un chemin local est confirme, il reste independant de ce refus.
+3. Le Cloud est absent du MVP. Une fonction Cloud post-MVP DOIT rester facultative; son refus ou sa revocation NE DOIT PAS degrader le chemin local ni les fonctions independantes du service refuse.
 4. Aucun failover vers le Cloud, un nouveau fournisseur ou une capture plus large NE DOIT etre silencieux.
 5. Audio, transcription, contexte, OCR, clipboard et credentials NE DOIVENT jamais apparaitre dans logs, telemetrie ou crash reports.
 6. Une reecriture echouee DOIT restituer exactement le texte brut disponible.
@@ -16,6 +16,8 @@ Cette baseline complete le [threat model](THREAT-MODEL-V0.md), les [flux](DATA-F
 8. Les mises a jour et modeles DOIVENT etre verifies cryptographiquement avant installation ou chargement.
 
 ## Consentement et controle
+
+Les flux Cloud et de synchronisation ci-dessous sont des exigences conditionnelles pour des fonctions post-MVP; ils ne constituent pas une autorisation de les inclure dans le MVP.
 
 ### Consentements separes
 
@@ -73,14 +75,14 @@ Un changement de fournisseur, de finalite, de categorie, de region ou de retenti
 - Sous Wayland ou lorsqu'une injection sure est impossible, Fluent DOIT proposer un fallback copie seule et expliquer l'action attendue.
 - Le texte place dans le presse-papiers DOIT etre considere expose aux autres applications.
 - Fluent NE DOIT PAS conserver l'ancien presse-papiers dans son historique, ses logs ou sa base.
-- Une restauration/expiration automatique NE DOIT ecraser aucune valeur modifiee apres l'operation. La politique temporelle et UX exacte reste a arbitrer et tester sur chaque OS.
+- Une restauration/expiration automatique NE DOIT ecraser aucune valeur modifiee apres l'operation. La politique temporelle et UX exacte reste a specifier et tester sur chaque OS.
 
 ## Stockage, historique et dictionnaire
 
 - Preferences, historique, dictionnaire, statistiques, manifestes et credentials DOIVENT etre stores separes logiquement.
-- Un mode zero-history DOIT garantir qu'aucun texte dicte n'est persiste, y compris dans journaux DB, index et caches.
-- Tant que le choix de produit sur l'historique par defaut n'est pas documente, l'implementation DEVRAIT adopter le defaut conservateur sans persistance C3.
-- La retention DOIT etre configurable ou clairement affichee; les durees exactes restent une decision produit ouverte.
+- Le mode zero-history est le defaut et DOIT garantir qu'aucun texte dicte n'est persiste, y compris dans journaux DB, index et caches.
+- L'historique texte local est disponible uniquement apres un opt-in explicite et revocable; son activation ne permet aucune persistance audio.
+- La retention de l'historique active DOIT etre configurable et clairement affichee; les valeurs exactes restent a specifier.
 - Export, suppression par categorie et suppression complete DOIVENT etre testables. Les sauvegardes/replicas suivent un delai publie.
 - Dictionnaire et snippets NE DOIVENT PAS etre utilises pour entrainement, telemetrie ou sync sans opt-in correspondant.
 - Les permissions fichiers DOIVENT etre restrictives. Le choix du chiffrement de base et de la gestion de cle exige une decision explicite fondee sur le modele de menace.
@@ -94,16 +96,16 @@ Un changement de fournisseur, de finalite, de categorie, de region ou de retenti
 - Les cles API de service et cles privees de signature NE DOIVENT jamais etre embarquees dans le client.
 - Les tests utilisent uniquement des credentials factices. Les revues verifient la forme des flux sans lire de valeur reelle.
 
-## Cloud, s'il est retenu, et retention
+## Cloud post-MVP facultatif et retention
 
-- Si D-09/D-10 confirment le mode local sans authentification, aucun compte NE DOIT etre requis pour ce mode.
+- Le Cloud est absent du MVP. Aucun compte NE DOIT etre requis pour installer ou utiliser le chemin local.
 - Chaque requete DOIT minimiser ses champs et etre liee a un consentement encore valide.
 - TLS est obligatoire; l'interface NE DOIT PAS annoncer E2EE si le serveur ou un fournisseur voit le contenu en clair.
 - L'audio et le contexte Cloud ont une retention nulle apres traitement par defaut. Tout TTL technique non nul DOIT etre chiffre, justifie et affiche avant envoi.
 - Fournisseurs, sous-traitants, regions, sauvegardes, suppression et contacts incident DOIVENT etre documentes avant activation production.
 - Retries, timeouts et files DOIVENT etre bornes et annulables. Aucun fournisseur de secours sans nouveau consentement.
 - La synchronisation DOIT etre opt-in par categorie, idempotente et resistante a la resurrection de donnees supprimees.
-- Une panne Cloud NE DOIT PAS detruire le texte brut deja produit ni declencher un autre fournisseur; si le chemin local est confirme, elle DOIT le laisser utilisable.
+- Une panne Cloud NE DOIT PAS detruire le texte brut deja produit ni declencher un autre fournisseur; elle DOIT laisser le chemin local utilisable.
 
 ## Logs, telemetrie et support
 
@@ -125,6 +127,9 @@ Un changement de fournisseur, de finalite, de categorie, de region ou de retenti
 - Une protection anti-rollback, un plan de rotation/revocation de cle, un staged rollout et un exercice de retrait DOIVENT exister avant beta.
 - Les modeles DOIVENT avoir provenance, licence et compatibilite documentees. Les fichiers tronques, surdimensionnes et malformes sont testes/fuzzes.
 - L'ajout d'une dependance ou d'un fournisseur hautement privilegie exige une revue de mainteneur, permissions, historique et plan de sortie.
+- Le depot public (D-11) NE DOIT contenir aucun secret ni donnee utilisateur; la revue d'historique, les scans et la protection des branches restent obligatoires.
+- Apache-2.0 couvre le code selon D-12 mais NE DOIT PAS etre presente comme la licence des modeles, corpus, donnees ou marques; leur provenance et leurs droits restent controles separement.
+- Le coeur local gratuit et le Cloud futur payant (D-13) NE DOIVENT affaiblir ni la verification supply chain ni les garanties locales. Paiement, compte Cloud et chaque consentement sensible restent des actes distincts.
 
 ## Accessibilite de l'interface de confidentialite
 
@@ -143,7 +148,7 @@ Un changement de fournisseur, de finalite, de categorie, de region ou de retenti
 | Phases 06-08 | Permissions, indicateurs, revocation, champs proteges, target-switch, clipboard et fallbacks Wayland. |
 | Phase 09 | Minimisation contexte, OCR reste desactive, fallback texte brut exact et transformations tracables. |
 | Phase 10 | Zero-history/zero-telemetry, export/suppression, redaction, corruption/migrations et permissions fichiers. |
-| Phase 11 | Matrice consentements, capture reseau, retention Cloud, auth/revocation, sync/delete et panne totale; independance du chemin local uniquement si D-09/D-10 la confirment. |
+| Phase 11 | Matrice consentements, capture reseau, retention Cloud, auth/revocation, sync/delete et panne totale; independance obligatoire du chemin local sans compte. |
 | Phase 12 | Revue threat model, fuzz frontieres, audit dependances/licences et zero critique/haute non acceptee. |
 | Phase 13 | Signature/notarisation, updater/rollback/retrait, notice exacte et incident response. |
 
@@ -151,18 +156,12 @@ Un changement de fournisseur, de finalite, de categorie, de region ou de retenti
 
 Une suspicion d'enregistrement non arrete, d'egress non consenti, de credential expose, de signature contournee ou de supply chain compromise est **critique**: stopper le rollout ou le service concerne, conserver uniquement les preuves non sensibles, revoquer les credentials/artefacts si necessaire et escalader immediatement au `project-manager` et aux proprietaires. Ne jamais copier le contenu utilisateur ou un secret dans le ticket d'incident.
 
-## Decisions encore ouvertes
+## Parametres restant a specifier
 
-Les points suivants ne sont pas fixes par cette baseline et necessitent produit/ADR avant implementation definitive:
+Ces details ne modifient pas D-08, D-09 ou D-10 et exigent une specification ou un ADR avant implementation:
 
-- D-09: compte obligatoire ou non, notamment pour le chemin local candidat;
-- D-10: Cloud present ou absent du MVP et fonctions qui en dependent;
-- historique active ou non par defaut et durees de retention locales;
-- restauration/expiration du clipboard par OS;
-- perimetre contextuel exact et eventuelles listes d'exclusion utilisateur;
-- activation future de l'OCR;
-- fournisseur, region, prix et retention de chaque service Cloud;
-- schema/fournisseur/retention de telemetrie;
-- chiffrement local et synchronisation E2EE;
-- autorite de signature, stockage de cles et politique de rotation;
-- exigences legales, age minimal, DPA et transferts internationaux selon marches retenus.
+- valeurs de duree et plafonds proposes lors de l'opt-in d'historique local;
+- chiffrement applicatif de la base locale et source de la cle;
+- fournisseurs, regions et retention exacte des services Cloud post-MVP;
+- schema, fournisseur et retention de telemetrie future, qui reste desactivee sans approbation et opt-in;
+- autorites, stockage, rotation et revocation des cles updater/modeles, ainsi que les eventuelles cles de chiffrement et de recovery.

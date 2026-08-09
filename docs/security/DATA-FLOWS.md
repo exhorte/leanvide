@@ -1,6 +1,6 @@
 # Flux de donnees local et Cloud
 
-Statut: cartographie logique Phase 00 soumise a validation. Elle represente les branches locales et Cloud possibles sans fermer D-09 (compte obligatoire ou non) ni D-10 (Cloud present ou absent du MVP). Les composants et fournisseurs exacts seront confirmes par decision produit, ADR et implementation.
+Statut: cartographie logique Phase 00 alignee sur les decisions confirmees le 2026-08-09. Le MVP est local, sans compte requis et sans Cloud; il utilise zero-history par defaut, un historique texte local opt-in a retention configurable et ne persiste aucun audio par defaut. Les branches Cloud decrites ici sont des frontieres post-MVP facultatives, pas des composants du MVP.
 
 Regle normative: **aucune donnee audio ou contextuelle ne quitte la machine sans consentement explicite et comprehensible avant le transfert**.
 
@@ -14,8 +14,8 @@ Voir aussi [Threat model v0](THREAT-MODEL-V0.md), [Classification](DATA-CLASSIFI
 | Z1 | Coeur Rust et adaptateurs OS | Autorite locale pour capture, traitement, permissions et effacement. |
 | Z2 | WebView/UI et IPC Tauri | Moins privilegiee; aucune lecture directe de secret ou buffer audio brut. |
 | Z3 | Stockage local, coffre OS, repertoire des modeles | Persistant; acces et integrite a proteger. |
-| Z4 | API Fluent Cloud, si retenue | Distante; acces seulement apres consent gate et authentification si necessaire. |
-| Z5 | Fournisseur ASR/LLM, telemetrie ou autre sous-traitant | Frontiere tierce distincte, affichee avant activation. |
+| Z4 | API Fluent Cloud post-MVP facultative | Distante; absente du MVP, acces seulement apres consent gate et authentification propre au service si necessaire. |
+| Z5 | Fournisseur ASR/LLM, telemetrie ou autre sous-traitant futur | Frontiere tierce distincte, affichee avant activation. |
 | Z6 | CI, depot d'artefacts, CDN updater/modeles | Canal de distribution non autorise a recevoir du contenu utilisateur. |
 
 Classes: C0 publique, C1 technique interne, C2 personnelle, C3 contenu sensible, C4 secret. Une donnee derivee herite de la classe la plus restrictive de ses sources.
@@ -23,7 +23,7 @@ Classes: C0 publique, C1 technique interne, C2 personnelle, C3 contenu sensible,
 ## Vue d'ensemble
 
 ```text
-                         (opt-in specifique)
+                    (post-MVP, opt-in specifique)
 Microphone --C3--> coeur local -----------+------> Cloud ASR/LLM --> resultat
                       |                    |
 Accessibilite/OCR ----+                    +------> sync optionnelle
@@ -48,7 +48,7 @@ Z0 microphone -> permission OS -> Z1 buffer borne -> VAD/ASR local
 | Element | Exigence |
 |---|---|
 | Entrees | Audio C3; eventuellement langue et hints C2-C3. |
-| Persistance | Audio en memoire seulement par defaut; aucun fichier temporaire implicite. Texte persiste uniquement selon le choix d'historique. |
+| Persistance | Audio en memoire seulement par defaut; aucun fichier temporaire implicite. Texte non persiste par defaut, puis persiste localement uniquement apres opt-in d'historique. |
 | Reseau | Zero egress. Le comportement doit etre verifie avec un test reseau automatisable. |
 | Logs | Etats, durees et codes d'erreur bornes; jamais audio, transcription, hint ou nom de document. |
 | Fin de vie | Arret/revocation/annulation vide les buffers et empeche toute reprise automatique. |
@@ -64,7 +64,7 @@ texte C3 -> validation cible -> injection directe
 
 Le coeur capture le minimum necessaire pour identifier la cible et la revalide juste avant l'injection. Si la cible est ambigue, differente, protegee ou inaccessible, Fluent ne colle pas et propose une copie seule explicite. Sous Wayland, le fallback clipboard est une capacite normale et visible.
 
-Le clipboard n'est pas un stockage confidentiel. Fluent ne lit ni ne conserve son contenu preexistant sauf si une future strategie de restauration, explicitement documentee et testee, le requiert. Une restauration ou un effacement automatique ne s'effectue que si la valeur placee par Fluent n'a pas change; la politique exacte reste ouverte.
+Le clipboard n'est pas un stockage confidentiel. Fluent ne lit ni ne conserve son contenu preexistant sauf si une future strategie de restauration, explicitement documentee et testee, le requiert. Une restauration ou un effacement automatique ne s'effectue que si la valeur placee par Fluent n'a pas change; sa specification temporelle et UX doit etre validee par OS avant implementation.
 
 ## DF-03 — Contexte d'accessibilite
 
@@ -91,7 +91,7 @@ UI Z2 -> validation IPC Z1 -> stores separes Z3
 historique C3 | dictionnaire C2-C3 | profils C2 | preferences C1-C2
 ```
 
-Les stores sont separables pour permettre zero-history, export et suppression granulaires. Des migrations interrompues ne doivent ni perdre ni republier des donnees supprimees. Les sauvegardes et caches font partie du perimetre de suppression. Aucun dictionnaire ou historique n'est synchronise sans opt-in de sync distinct.
+Les stores sont separables pour garantir zero-history par defaut, puis export et suppression granulaires si l'utilisateur active l'historique texte local. La duree de retention est configurable; ses valeurs exactes restent a specifier. Des migrations interrompues ne doivent ni perdre ni republier des donnees supprimees. Les sauvegardes et caches font partie du perimetre de suppression. Aucun dictionnaire ou historique n'est synchronise sans opt-in de sync distinct post-MVP.
 
 ## DF-06 — Modeles locaux
 
@@ -102,7 +102,7 @@ catalogue Z6 -> manifeste signe/digest -> telechargement partiel Z3
 
 Les requetes peuvent contenir version d'application, plateforme et modele demande (C1); jamais audio, transcription, dictionnaire, titre de fenetre ou identifiant de compte inutile. Un modele dont signature, digest, taille, format ou licence ne correspond pas est rejete. L'ancien modele sain reste disponible lorsque compatible.
 
-## DF-07 — ASR ou reecriture Cloud facultative
+## DF-07 — ASR ou reecriture Cloud post-MVP facultative
 
 ```text
 audio/texte/contexte selectionne C3
@@ -112,7 +112,7 @@ audio/texte/contexte selectionne C3
 
 Les opt-in ASR Cloud, reecriture Cloud et contexte Cloud sont separes. La requete contient seulement les champs necessaires. Les retries sont bornes et ne survivent pas a une revocation. Audio et contexte ne sont pas conserves par defaut apres le traitement; tout TTL technique non nul doit etre chiffre, affiche et approuve. Une erreur rend le texte brut deterministe et ne declenche aucun autre fournisseur silencieusement.
 
-## DF-08 — Synchronisation Cloud facultative
+## DF-08 — Synchronisation Cloud post-MVP facultative
 
 ```text
 stores locaux selectionnes Z3 -> opt-in sync -> chiffrement transport
@@ -130,7 +130,7 @@ evenements allowlist C1-(C2 minimal) -> redaction locale -> opt-in
  -> Z4/Z5 observabilite -> retention bornee
 ```
 
-Audio, transcription, dictionnaire, contenu OCR/accessibilite/clipboard, titre de fenetre, chemin personnel, credential et payload IPC sont interdits. Le mode zero-telemetry n'emet rien, y compris au crash. Un diagnostic joint manuellement est previsualise et expurge localement. Les decisions sur fournisseur, schema, retention et opt-in restent ouvertes; en leur absence, aucun endpoint de telemetrie n'est active.
+Audio, transcription, dictionnaire, contenu OCR/accessibilite/clipboard, titre de fenetre, chemin personnel, credential et payload IPC sont interdits. Le mode zero-telemetry n'emet rien, y compris au crash. Un diagnostic joint manuellement est previsualise et expurge localement. Le schema, le fournisseur et la retention de telemetrie restent a specifier; en leur absence, aucun endpoint de telemetrie n'est active et toute activation future exige un opt-in distinct.
 
 ## DF-10 — Authentification et credentials
 
@@ -139,7 +139,7 @@ login systeme/navigateur -> Z4 auth -> token court C4
 refresh token C4 -> coffre natif Z3 -> Z1 uniquement
 ```
 
-Les tokens ne transitent pas vers la WebView au-dela d'un handle ou etat minimal, ne sont jamais journalises et sont scopes au service. Deconnexion locale efface les tokens; deconnexion globale et revocation serveur sont requises avant le gate Cloud. Les cles de service et de signature ne sont jamais distribuees au client.
+Ce flux est absent du chemin local et du MVP. Aucun compte ni token n'est requis pour installer et utiliser le chemin local. Pour un service Cloud post-MVP, les tokens ne transitent pas vers la WebView au-dela d'un handle ou etat minimal, ne sont jamais journalises et sont scopes au service. Deconnexion locale efface les tokens; deconnexion globale et revocation serveur sont requises avant le gate Cloud. Les cles de service et de signature ne sont jamais distribuees au client.
 
 ## DF-11 — Updater et supply chain
 
@@ -154,7 +154,7 @@ Ce flux ne partage aucun endpoint ou stockage avec le contenu utilisateur. TLS n
 
 | Flux sortant | Etat par defaut | Consentement requis | Revocation |
 |---|---|---|---|
-| Telechargement updater/modeles | Autorise pour donnees C0-C1 minimales; choix d'auto-download a decider | Information claire; aucun contenu utilisateur | Desactive les controles automatiques selon politique sans casser les fonctions deja installees qui n'en dependent pas. |
+| Telechargement updater/modeles | Autorise pour donnees C0-C1 minimales, sans compte; choix d'auto-download a specifier | Information claire; aucun contenu utilisateur | Desactive les controles automatiques selon politique sans casser les fonctions deja installees qui n'en dependent pas. |
 | ASR Cloud | Desactive | Opt-in ASR, donnees audio, destination et retention | Stop immediat, annule retries et purge files locales. |
 | Reecriture Cloud | Desactive | Opt-in reecriture; texte transmis et fournisseur | Retour au texte brut local; aucun failover tiers. |
 | Contexte vers Cloud | Desactive meme si ASR/reecriture active | Opt-in distinct accessibilite/OCR | Stop immediat, traitement sans contexte. |
@@ -167,12 +167,14 @@ Ce flux ne partage aucun endpoint ou stockage avec le contenu utilisateur. TLS n
 |---|---|---|---|
 | Audio brut | Memoire le temps de la dictee/ASR | Aucun transfert en mode local; zero retention apres ASR Cloud | Annulation, fin de traitement, revocation et cleanup apres crash. |
 | Contexte accessibilite/OCR | Memoire de la dictee uniquement | Aucun transfert sans opt-in distinct; zero retention apres traitement | Fin/annulation et suppression des caches. |
-| Transcription | Affichage/injection; historique selon decision utilisateur | Seulement service choisi; pas de stockage implicite | Zero-history immediat; suppression inclut index, caches et sauvegardes selon delai publie. |
+| Transcription | Affichage/injection; zero-history par defaut, historique local seulement apres opt-in | Aucun Cloud au MVP; seulement service post-MVP choisi et sans stockage implicite | Zero-history immediat; suppression inclut index, caches et sauvegardes selon delai publie. |
 | Dictionnaire/profils | Persistant local jusqu'a suppression | Aucun sans sync opt-in | Suppression locale et distante convergente. |
 | Logs | Rotation bornee, contenu sensible interdit | Aucun si zero-telemetry | Effacement avec diagnostics; duree chiffree a decider. |
 | Tokens | Coffre OS jusqu'a logout/revocation | Hash/session selon auth | Revocation et expiration bornees. |
 
-Les durees chiffrees non encore decidees ne sont pas inventees dans cette baseline. Jusqu'a decision, aucun stockage Cloud de contenu C3 n'est autorise au-dela du traitement en cours et aucun historique local implicite n'est suppose.
+Les durees chiffrees non encore specifiees ne sont pas inventees dans cette baseline. Le MVP n'envoie ni ne stocke de contenu dans le Cloud. Dans une fonction post-MVP consentie, aucun stockage Cloud de contenu C3 n'est autorise au-dela du traitement en cours sans TTL explicite; localement, aucun historique implicite n'est autorise.
+
+Le depot public, la licence Apache-2.0 et la monetisation future du Cloud ne modifient pas ces flux: aucun secret ou contenu utilisateur ne rejoint le depot ou la distribution, les licences/provenances des modeles restent verifiees separement et un achat ne vaut ni compte obligatoire pour le local ni consentement groupe.
 
 ## Preuves attendues
 
