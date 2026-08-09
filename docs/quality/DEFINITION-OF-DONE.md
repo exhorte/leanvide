@@ -67,9 +67,11 @@ supprimees.
   referencent le materiel de [PERFORMANCE-BUDGETS.md](PERFORMANCE-BUDGETS.md)
   et publient percentiles, unites, repetitions et artefacts bruts.
 - La baseline commence sur macOS Apple Silicon (MacBook Air M2 16 Gio propose
-  si disponible), puis Linux et Windows. Le plancher provisoire est 4 coeurs
-  modernes, 8 Gio RAM, 2 Gio libres et aucun GPU requis; 16 Gio est la
-  reference RAM.
+  si disponible), puis Linux et Windows. Si cette machine manque, Windows est
+  la reference pratique et l'absence de baseline macOS est archivee; ce repli
+  ne change pas l'ordre produit lorsque macOS est disponible. Le plancher
+  provisoire est 4 coeurs modernes, 8 Gio RAM, 2 Gio libres et aucun GPU
+  requis; 16 Gio est la reference RAM.
 - Les seuils ne sont qualifiants qu'apres prototype. Avant cela, le livrable est
   la baseline reproductible et l'ecart a la cible proposee, jamais un « PASS »
   produit sans decision.

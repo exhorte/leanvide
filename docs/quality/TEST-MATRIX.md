@@ -11,15 +11,17 @@ des **cibles MVP proposees** dans
 Le francais, les trois configurations `HW-*` et le parcours local sans compte ni
 reseau sont des decisions MVP confirmees. La reference de mesure est macOS
 Apple Silicon (MacBook Air M2 16 Gio propose si disponible), suivi de Linux
-puis Windows. Elles ne transforment pas les configurations candidates ni les
-cibles de [PERFORMANCE-BUDGETS.md](PERFORMANCE-BUDGETS.md) en resultats de
-benchmark ou engagements finaux avant les prototypes Phase 02.
+puis Windows. Sans cette machine macOS, Windows devient la reference pratique;
+ce repli ne modifie pas l'ordre produit quand la baseline macOS est executable.
+Elles ne transforment pas les configurations candidates ni les cibles de
+[PERFORMANCE-BUDGETS.md](PERFORMANCE-BUDGETS.md) en resultats de benchmark ou
+engagements finaux avant les prototypes Phase 02.
 
 ## Axes de couverture
 
 | Axe | Valeurs minimales |
 |---|---|
-| OS | macOS Apple Silicon (reference); Ubuntu LTS x86_64; Windows 11 x64 |
+| OS | macOS Apple Silicon (reference si disponible); Ubuntu LTS x86_64; Windows 11 x64 (reference pratique sinon) |
 | Session Linux | X11; Wayland, compositor/version declares |
 | Audio | micro integre; fixture WAV 16 kHz mono; peripherique USB en non-regression quand disponible |
 | Materiel | plancher provisoire 4 coeurs modernes, 8 Gio RAM, 2 Gio libres, GPU non requis; reference 16 Gio |
@@ -93,7 +95,7 @@ restaure ni ne journalise le presse-papiers prive.
 | Phase | Preuve QA attendue |
 |---|---|
 | 01 Fondation | harnesses/fixtures prets ou plan de livraison trace; CI execute les controles disponibles; parcours PTT/toggle local sans compte et aucune persistence audio specifies |
-| 02 Prototypes | baseline macOS Apple Silicon puis Linux/Windows, capability map et valeurs figables mises a jour; aucun seuil candidat ne passe sans artefact |
+| 02 Prototypes | baseline macOS Apple Silicon puis Linux/Windows si disponible; sinon baseline pratique Windows et absence macOS archivees; capability map et valeurs figables mises a jour; aucun seuil candidat ne passe sans artefact |
 | 04 Audio | QA-AUD-01, 02, 04 et 05, QA-SYS-01 avec artefacts; QA-AUD-03 seulement si un prototype retient VAD hors MVP |
 | 05 ASR | QA-ASR-01 a 03, RTF/WER/CER et tailles modeles |
 | 06 macOS | QA-INJ-01 a 04 macOS, permissions et fallback |

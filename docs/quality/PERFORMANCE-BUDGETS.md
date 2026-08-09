@@ -7,7 +7,7 @@ Ce document cadre les mesures de Fluent avant les prototypes. Les valeurs marque
 engagement de release, ni un critere de gate acquis. Elles deviennent un seuil de
 gate seulement apres la validation des prototypes de la phase 02, le choix du
 moteur ASR et la qualification du materiel de reference par les prototypes
- Phase 02.
+Phase 02.
 
 Les valeurs **cible optimale** servent a orienter les choix d'architecture. Une
 mesure qui ne peut pas encore etre figee est explicitement listee dans la derniere
@@ -17,7 +17,9 @@ Les decisions produit confirmees le 2026-08-09 fixent le francais pour le MVP,
 le chemin local sans compte ni Cloud, le PTT par defaut avec toggle accessible,
 zero historique par defaut et aucun audio persiste. La reference de mesure est
 macOS Apple Silicon; le poste propose est un MacBook Air M2 16 Gio lorsqu'il
-est disponible. Linux, puis Windows, suivent dans cet ordre de validation.
+est disponible. Sans cette machine de test, `HW-WIN` devient la reference
+pratique de mesure. L'ordre produit macOS, puis Linux, puis Windows est conserve
+lorsque la reference macOS est disponible; le repli ne le modifie pas.
 
 Ces decisions ne valident aucun chiffre de ce document. `HW-MAC`, `HW-LNX` et
 `HW-WIN`, le moteur, le modele et les resultats restent a qualifier par les
@@ -43,17 +45,19 @@ reseau apres acquisition volontaire du modele requis.
 
 ## Materiel de reference propose
 
-macOS Apple Silicon est la plateforme de reference confirmee. Le MacBook Air
-M2 16 Gio ci-dessous est le poste de test propose si disponible; ses versions
-OS, pilotes et conditions de test restent a figer par les prototypes Phase 02.
-Linux, puis Windows, sont executes apres la baseline macOS. Ces configurations
-ne sont pas des resultats de benchmark ni une garantie finale de support.
+macOS Apple Silicon est la plateforme de reference produit confirmee. Le
+MacBook Air M2 16 Gio ci-dessous est le poste de test propose si disponible;
+ses versions OS, pilotes et conditions de test restent a figer par les
+prototypes Phase 02. Si ce materiel n'est pas disponible, Windows devient la
+reference pratique de mesure. Lorsque la baseline macOS est possible, Linux,
+puis Windows, sont executes dans cet ordre produit. Ces configurations ne sont
+pas des resultats de benchmark ni une garantie finale de support.
 
 | ID | Systeme et scenario requis | Configuration candidate | Pourquoi |
 |---|---|---|---|
-| HW-MAC | macOS Apple Silicon | MacBook Air M2, 16 Gio RAM, SSD interne, micro integre, si disponible | reference de mesure confirmee; permissions et memoire unifiee |
+| HW-MAC | macOS Apple Silicon | MacBook Air M2, 16 Gio RAM, SSD interne, micro integre, si disponible | reference de mesure conditionnelle; permissions et memoire unifiee |
 | HW-LNX | Ubuntu LTS x86_64, GNOME | portable Ryzen 7 7840U, 16 Gio RAM, SSD NVMe; session X11 puis Wayland | deuxieme ordre de validation, couvre X11/Wayland sans GPU dedie |
-| HW-WIN | Windows 11 x64, secteur et batterie | portable Intel Core i5-1240P, 16 Gio RAM, SSD NVMe, micro integre | troisieme ordre de validation x86, sans GPU dedie |
+| HW-WIN | Windows 11 x64, secteur et batterie | portable Intel Core i5-1240P, 16 Gio RAM, SSD NVMe, micro integre | reference pratique si `HW-MAC` indisponible; sinon troisieme ordre de validation x86 |
 
 Une reference n'est valable que si les versions OS, pilotes audio, mode
 d'alimentation et peripherique sont archives avec le resultat. Les tests de

@@ -19,6 +19,11 @@ Linux et Windows. Le plancher provisoire est 4 coeurs modernes, 8 Gio RAM,
 produit ne rendent ni les machines candidates ni les chiffres comparables
 qualifiants avant les prototypes Phase 02.
 
+Si la machine macOS Apple Silicon n'est pas disponible, Windows devient la
+reference pratique de mesure. Ce repli ne pretend pas que ce materiel manque et
+ne change pas l'ordre produit macOS, puis Linux, puis Windows lorsque la
+reference macOS peut etre executee.
+
 Le chemin MVP est local, sans compte et sans Cloud. Une fois le modele local
 acquis volontairement, le test reseau coupe verifie cet invariant. Les mesures
 de capture couvrent le PTT par defaut et son toggle accessible; une ecoute
@@ -57,8 +62,9 @@ est marque invalide avec la cause.
 
 Avant chaque comparaison :
 
-1. Consigner la configuration materielle `HW-MAC`, puis `HW-LNX` et `HW-WIN`,
-   de [PERFORMANCE-BUDGETS.md](PERFORMANCE-BUDGETS.md), plus les
+1. Si `HW-MAC` est disponible, consigner `HW-MAC`, puis `HW-LNX` et `HW-WIN`,
+   de [PERFORMANCE-BUDGETS.md](PERFORMANCE-BUDGETS.md). Sinon, consigner
+   `HW-WIN` comme reference pratique et l'absence de baseline macOS, plus les
    versions OS, noyau/compositor et pilotes.
 2. Fermer les processus non indispensables, desactiver les synchronisations et
    indiquer secteur/batterie, profil CPU et etat thermique.
@@ -148,7 +154,9 @@ QA execute les campagnes repetitives. Une commande qui reussit sans produire
 ## Couverture plateforme
 
 Chaque scenario applicable est execute d'abord sur macOS Apple Silicon, puis
-Linux X11 et enfin Windows. Linux Wayland est une colonne distincte : le rapport
-declare le compositor et les capabilities detectees. Ne pas transformer
-l'impossibilite d'injecter en echec silencieux ni en support presume; executer
-et mesurer le fallback clipboard avec instruction utilisateur explicite.
+Linux X11 et enfin Windows lorsque la reference macOS est disponible. Sinon,
+Windows est la reference pratique et l'absence de baseline macOS est archivee.
+Linux Wayland est une colonne distincte : le rapport declare le compositor et
+les capabilities detectees. Ne pas transformer l'impossibilite d'injecter en
+echec silencieux ni en support presume; executer et mesurer le fallback
+clipboard avec instruction utilisateur explicite.

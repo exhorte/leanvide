@@ -16,6 +16,10 @@
   macOS Apple Silicon (MacBook Air M2 16 Gio propose si disponible), ordre de
   validation macOS puis Linux puis Windows, francais MVP, plancher provisoire
   4 coeurs modernes/8 Gio RAM/2 Gio libres/GPU non requis et reference 16 Gio.
+- Si la machine macOS de reference n'est pas disponible, Windows devient la
+  reference pratique de mesure. Ne pas presumer la disponibilite reelle; ce
+  repli ne modifie pas l'ordre produit macOS puis Linux puis Windows lorsque
+  macOS peut servir de baseline.
 - Le MVP est PTT par defaut avec toggle accessible, sans ecoute continue; il
   est local sans compte ni Cloud, en zero-history par defaut. Un historique
   texte local est opt-in avec retention configurable; aucun audio ne persiste.
