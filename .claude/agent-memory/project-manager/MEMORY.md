@@ -17,5 +17,11 @@
 - `CYCLE-20260809-03` est COMPLETE: PR #7 a #11 integrees, union locale install/lint/test/check/build PASS, puis CI PR `31328840492` et CI `develop` `31329298017` SUCCESS sur Ubuntu, macOS et Windows.
 - Le premier run CI d'union a detecte `icons/icon.png` manquant sur macOS/Linux; le correctif reproductible `70697cd` a ete valide sur les trois OS. Garder la matrice multiplateforme comme gate, meme pour un scaffold minimal.
 - Dette supply chain: `glib 0.18.5` transitif Linux/RUSTSEC-2024-0429 (moyen) a reevaluer en PHASE-02 et a resoudre, prouver inatteignable ou accepter par ADR avant Gate 12; automatiser advisories/licences/sources avant Gate 12.
-- PHASE-02 est READY mais non active tant qu'un cycle explicite architecture/prototypes n'est pas ouvert.
+- Avant `CYCLE-20260809-04`, PHASE-02 etait READY mais non active; ce cycle a depuis active la phase.
 - `CYCLE-20260809-04` ouvre PHASE-02 par une tranche contracts-first: quatre leads produisent ADR/contrats et plans de preuve sans implementation runtime, puis une revue securite independante; les prototypes ne commencent qu'apres cette integration.
+- `CYCLE-20260809-04` est COMPLETE: l'union initiale a echoue la revue securite sur B-01/H-01/H-02/M-01/M-02/M-03, puis les cinq proprietaires ont corrige sans overlap. La re-review r2 est PASS et ADR-0002 est `Accepted-for-spike` uniquement.
+- Les PR #13 a #17 sont fusionnees dans `develop@18520033`; la CI finale `31335758078` est SUCCESS sur Ubuntu, macOS et Windows. L'union finale locale avait 14 fichiers uniques, neuf docs lies, 58/58 codes, 11/11 codes ASR et `pnpm check` PASS.
+- PHASE-02 reste ACTIVE a 40%: contrats remplacables et ADR/rollback satisfont deux criteres sur cinq; callback stress, transcription/injection et mitigation de faisabilite native restent NOT_RUN/PENDING.
+- Conditions non negociables des spikes: zero egress; F-03 avant toute mutation; VaultHarness C4 synthetique test-only; modeles manuels epingles double revue; a11y-preflight; clipboard CHANGED/UNKNOWN sans mutation; aucun retry apres DELIVERY_OUTCOME_UNKNOWN; F-05 avant IPC; F-01/F-02 ouverts.
+- GitHub Actions avertit que checkout/setup-node/cache ciblent encore Node 20 et sont forces sur Node 24; R-019 appartient a QA et n'a pas bloque le run vert.
+- `CYCLE-20260809-05` est ACTIVE et borne aux contrats Rust executables, a une surface React accessible sans nouvel IPC/dependance, et a la qualification documentaire F-03. Les spikes natifs ASR/plateforme restent interdits jusqu'au cycle suivant.

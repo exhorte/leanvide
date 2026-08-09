@@ -20,6 +20,7 @@
 | R-016 | Seuils et materiels candidats non valides par prototype | haute | eleve | QA + ai-asr + platform | confirmer D-03/D-05/D-06, puis baselines reproductibles en Phase 02 |
 | R-017 | Preuves concurrentielles principalement publiees par les fournisseurs | moyenne | moyen | docs-researcher + product-architect | registre de preuves, certitude explicite, aucun choix fonde sur le marketing seul |
 | R-018 | Liens croises repartis entre plusieurs draft PR | moyenne | moyen | project-manager | valider l'union localement et integrer le lot documentaire de facon coordonnee apres Gate 00 |
+| R-019 | Actions GitHub ciblees Node 20 forcees sur Node 24 par les runners | moyenne | moyen | qa-release-lead | qualifier puis mettre a jour les actions SHA-pinnees avant que le fallback runner soit retire |
 
 Chaque risque recoit ensuite: date de revue, indicateurs, plan de contingence et statut.
 
@@ -58,3 +59,18 @@ Chaque risque recoit ensuite: date de revue, indicateurs, plan de contingence et
 | R-011 | ouvert, non bloquant Gate 01 | dependances directes et lockfiles audites; aucun avis critique/haut; F-01 `glib 0.18.5` moyen et F-03 automatisation d'audit restent ouverts | reevaluer F-01 en PHASE-02; rendre advisories/licences/sources bloquants avant Gate 12 |
 | R-016 | ouvert, prochain gate | le shell et l'IPC ont une baseline de build mais aucun budget audio/ASR n'est encore mesure | prototypes reproductibles et baselines materiel en PHASE-02 |
 | R-018 | **clos** | tous les lots PHASE-00/01 requis sont integres dans `develop`; CI `31329298017` verte x3 | liens et preuves restent verifies dans chaque cycle suivant |
+
+## Revue CYCLE-20260809-04 — 2026-08-09
+
+| Risque | Statut | Indicateur ou preuve | Contingence / prochaine revue |
+|---|---|---|---|
+| R-001 | ouvert, mitigation contractuelle | Wayland separe par compositor/portal; L1/L0 normal; aucune injection universelle promise | executer les campagnes nommees; absence de session Linux reste `UNAVAILABLE_ENVIRONMENT` |
+| R-002 | ouvert, protocole accepte | callback sans I/O/log/allocation evitable/verrou bloquant; SPSC et overflow fail-closed specifies | harnais, stress 3x10 min, overflow et 1000 annulations en cycle executable |
+| R-003 | ouvert | whisper.cpp/modeles candidats et protocole RTF/WER/CER fixes, aucune mesure | acquisition manuelle doublement revue puis benchmarks sur reference et minimum |
+| R-005 | ouvert, mitigation contractuelle | permissions progressives et oracle a11y specifies; macOS Apple Silicon indisponible | campagne macOS physique obligatoire avant promotion plateforme |
+| R-006 | reduit au niveau contrat | zero egress, C3 volatile, VaultHarness C4 test-only, clipboard UNKNOWN/CHANGED zero mutation | fault injection, scans canari et re-review de chaque spike sensible |
+| R-007 | ouvert, borne pour spike | manifeste modele epingle; quarantaine 2 Gio, 8 entrees, TTL 24 h; aucun auto-download produit | catalogue signe/trust root/revocation/rollback avant promotion produit |
+| R-008 | clos pour le cycle | 14 fichiers uniques sur cinq branches, unions initiale/r2/finale sans conflit | reconduire le controle ownership a chaque cycle |
+| R-011 | ouvert, gates renforces | F-01 `OPEN_UNPROVEN`, F-02 allowlist, F-03 avant toute mutation manifeste/lockfile, F-05 avant IPC | automatiser advisories/yanked/licences/sources; SBOM/notices avant Gate 12 |
+| R-016 | ouvert, bloque Gate 02 final | deux criteres documentaires sur cinq satisfaits; aucun prototype natif execute | cycles executables et artefacts reproductibles; ne jamais convertir NOT_RUN en PASS |
+| R-019 | ouvert, non bloquant actuel | run `31335758078` vert x3 mais GitHub avertit que checkout/setup-node/cache ciblent Node 20 et sont forces sur Node 24 | QA qualifie des revisions compatibles Node 24 avec CI negative/rollback au prochain lot autorise |

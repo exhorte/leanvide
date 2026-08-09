@@ -5,7 +5,7 @@ Responsable: `project-manager`
 
 ## Phase active
 
-`PHASE-02` — `ACTIVE` (`CYCLE-20260809-04`)
+`PHASE-02` — `ACTIVE` (`CYCLE-20260809-05`)
 
 ## Tableau global
 
@@ -13,7 +13,7 @@ Responsable: `project-manager`
 |---:|---|---:|---|---|---|
 | 00 | DONE | 100% | **PASS** | `docs/project-management/cycles/CYCLE-20260809-02.md`, acceptation utilisateur du 2026-08-09 | aucun |
 | 01 | DONE | 100% | **PASS** | `docs/project-management/cycles/CYCLE-20260809-03.md`, CI `31328840492` et `31329298017` | aucun |
-| 02 | ACTIVE | 0% | en cours | `docs/project-management/cycles/CYCLE-20260809-04.md` | aucun; architecture et contrats en cours |
+| 02 | ACTIVE | 40% | **PENDING** | `CYCLE-20260809-04`, ADR-0002 `Accepted-for-spike`, revue securite r2, CI `31335758078` | aucun pour le prochain lot; preuves audio/ASR/OS, materiel macOS et sessions Linux encore requises pour fermer le gate |
 | 03 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
 | 04 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
 | 05 | NOT_STARTED | 0% | verrouille | aucune | depend de 04 |
@@ -41,6 +41,8 @@ Responsable: `project-manager`
 | 2026-08-09 | Fusion des cinq PR PHASE-00 dans `develop` et ouverture de PHASE-01 | project-manager | PR #1 a #5 fusionnees; `docs/project-management/cycles/CYCLE-20260809-03.md` |
 | 2026-08-09 | Cloture `COMPLETE` de PHASE-01 apres correction multiplateforme et deux matrices CI vertes | project-manager | PR #7 a #11; runs `31328840492` et `31329298017`; `docs/project-management/cycles/CYCLE-20260809-03.md` |
 | 2026-08-09 | Ouverture du cycle contracts-first de PHASE-02 | project-manager | `docs/project-management/cycles/CYCLE-20260809-04.md` |
+| 2026-08-09 | Cloture `COMPLETE` du cycle contracts-first apres remediation et re-review securite r2 | project-manager | PR #13 a #17; `develop@18520033`; run `31335758078` SUCCESS x3 |
+| 2026-08-09 | Passage d'ADR-0002 a `Accepted-for-spike` et ouverture des fondations executables | project-manager + product-architect | `docs/architecture/ADR-0002-MODULAR-RUNTIME.md`, `docs/project-management/cycles/CYCLE-20260809-05.md` |
 
 ## Evaluation du Gate 00
 
@@ -64,6 +66,21 @@ La progression de 100% correspond aux six criteres du gate satisfaits sur six; e
 | Aucun secret ou chemin utilisateur dans le depot | PASS | scans de l'union et revue supply chain: zero `.env`, credential ou chemin personnel suivi |
 | Frontend et Rust echangent une commande IPC typee de smoke test | PASS | `health_check` sans requete, reponse `{status:"ok",version:string}`; tests TypeScript et Rust 2/2 |
 | Worktrees agents sans conflit | PASS | union de 47 fichiers uniques sans overlap d'ownership; integrations Git sans conflit |
+
+## Evaluation du Gate 02
+
+La progression de 40% correspond a deux criteres du gate satisfaits sur cinq.
+Elle n'est pas une estimation d'avancement des prototypes. Le Gate 02 reste
+`PENDING`: aucune campagne audio, ASR ou plateforme native n'est encore
+revendiquee.
+
+| Critere | Verdict | Preuve ou blocage |
+|---|---|---|
+| Aucun risque critique de faisabilite sans mitigation | PENDING | contrats fail-closed et fallbacks documentes; faisabilite native, materiels et environnements encore non mesures |
+| Contrats remplacables pour ASR et plateformes | PASS | cinq ports, machine a etats, taxonomie 58 codes, IPC versionne et revue securite r2 PASS; ADR-0002 `Accepted-for-spike` |
+| Callback audio conforme sous stress | NOT_RUN | protocole SPSC/callback et campagnes specifies; aucun harnais executable ni artefact de stress |
+| Transcription locale et injection de preuve sur la reference | NOT_RUN | plans ASR/OS specifies; aucun modele, microphone, hotkey ou injection execute dans le cycle contracts-first |
+| ADR avec compromis et retours arriere | PASS | ADR-0002 compare les options, borne permissions/egress/IPC et impose rollback + conditions non negociables |
 
 ## Mode de mise a jour
 
