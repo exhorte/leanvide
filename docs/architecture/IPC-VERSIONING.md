@@ -109,10 +109,10 @@ pas sur le nom de la future commande de transport.
   "outcome": {
     "type": "error",
     "error": {
-      "domain": "contract",
-      "code": "UNSUPPORTED_SCHEMA",
+      "domain": "Contract",
+      "code": "CONTRACT_UNSUPPORTED",
       "retryable": false,
-      "recoverability": "none",
+      "recoverability": "None",
       "messageKey": "error.contract.unsupported_schema",
       "safeDetails": {}
     }
@@ -284,25 +284,25 @@ doit être bornée sans tronquer silencieusement le RawTranscript: si le transfe
 direct dépasse la limite, le produit exige un mécanisme local explicite revu,
 pas un chemin temporaire inventé.
 
-## 11. Erreurs de protocole
+## 11. Mapping des erreurs de protocole
 
-Codes minimaux:
+L'IPC ne crée aucune deuxième taxonomie. Toute erreur d'enveloppe est sérialisée
+avec un code Contract et son quadruplet exact de
+[CORE-CONTRACTS.md](CORE-CONTRACTS.md):
 
-- INVALID_ENVELOPE
-- UNSUPPORTED_PROTOCOL
-- UNSUPPORTED_SCHEMA
-- PAYLOAD_TOO_LARGE
-- INVALID_PAYLOAD
-- UNAUTHORIZED_WINDOW
-- INVALID_STATE
-- DUPLICATE_REQUEST
-- REQUEST_EXPIRED
-- CORE_BUSY
-- INTERNAL
+| Condition IPC | code exact | retryable | recoverability |
+|---|---|---:|---|
+| enveloppe/payload invalide, trop grand, clé dupliquée ou requestId dupliqué | CONTRACT_INVALID_INPUT | false | None |
+| protocole, schéma, fenêtre ou origine non autorisés | CONTRACT_UNSUPPORTED | false | None |
+| commande hors état, request expirée ou Epoch invalide | CONTRACT_INVALID_STATE | false | None |
+| core occupé avant effet | CONTRACT_BUSY | true | RetryOperation |
+| admission refusée faute de ressource avant effet | CONTRACT_RESOURCE_EXHAUSTED | true | RetryOperation |
+| invariant interne | CONTRACT_INTERNAL | false | None |
 
-Ces erreurs portent uniquement messageKey et safeDetails allowlist. Elles ne
-révèlent pas la liste complète des commandes à une origine non autorisée ni une
-cause Rust/Tauri libre.
+Les raisons fines restent des safeDetails allowlist pour une origine autorisée;
+elles ne deviennent pas des codes. Une origine non autorisée ne reçoit ni la
+liste complète des commandes, ni la raison de capability, ni une cause
+Rust/Tauri libre.
 
 ## 12. Tests obligatoires avant v1
 

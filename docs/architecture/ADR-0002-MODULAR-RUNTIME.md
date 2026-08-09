@@ -53,6 +53,7 @@ Cloud. La revue supply chain a identifié:
 
 - F-01: glib 0.18.5 transitif Linux visé par RUSTSEC-2024-0429;
 - F-02: seize advisories RustSec informatives unmaintained transitives;
+- F-03: audits advisories/yanked/licences/sources non encore bloquants en CI;
 - F-05: toute future commande Tauri serait accessible aux WebViews locales par
   défaut sans capability explicite.
 
@@ -69,7 +70,7 @@ ils ne prouvent pas que les prototypes réussiront.
 | [Threat model](../security/THREAT-MODEL-V0.md) | TM-02 capture orpheline, TM-05 mauvaise cible, TM-14 IPC, TM-18 résidus mémoire | audit de l'implémentation |
 | [Budgets](../quality/PERFORMANCE-BUDGETS.md) | définitions de latence, pertes, ressources et fallback | seuils déjà atteints |
 | [Plan de mesure](../quality/MEASUREMENT-PLAN.md) | artefacts et campagnes reproductibles | harnesses déjà disponibles |
-| [Revue supply chain](../security/PHASE-01-SUPPLY-CHAIN-REVIEW.md) | F-01/F-02/F-05 et baseline minimale | innocuité future des dépendances |
+| [Revue supply chain](../security/PHASE-01-SUPPLY-CHAIN-REVIEW.md) | F-01/F-02/F-03/F-05 et baseline minimale | innocuité future des dépendances |
 | dépôt PHASE-01 | health_check sans requête, main WebView unique, aucune capability/permission/plugin sensible | sécurité d'une extension IPC |
 
 ## 4. Forces de décision
@@ -106,7 +107,8 @@ et canaux bornés.
   PlatformAdapter, TextInjector et SettingsStore.
 - Le shell Tauri compose les adaptateurs et valide l'IPC; la WebView ne possède
   ni état d'enregistrement ni accès direct aux ports.
-- Le MVP accepte une seule session active; une seconde demande reçoit Busy.
+- Le MVP accepte une seule session active; une seconde demande reçoit
+  CONTRACT_BUSY avec RetryOperation sans transition Error.
 - Les implémentations Cloud sont absentes. Un port n'autorise aucun endpoint.
 
 ### 5.2 Topologie d'exécution
@@ -141,9 +143,11 @@ l'annulation ou au discard conformément au zero-history; aucune persistance
 implicite n'est permise.
 
 La remise suit L0 résultat interne, L1 clipboard préparé, L2 collage automatisé
-et L3 insertion native. ConfirmedExact, ClipboardPrepared, Unconfirmed et
-OutcomeUnknown sont distincts. Il n'existe aucun faux succès ni retry
-automatique après une issue inconnue.
+et L3 insertion native. ConfirmedExact, ClipboardPrepared,
+InternalRecoveryAvailable, RejectedBeforeEffect et OutcomeUnknown sont
+distincts. OutcomeUnknown correspond exclusivement au code
+DELIVERY_OUTCOME_UNKNOWN et à Recoverability OutcomeUnknown; il n'existe aucun
+faux succès, retry ou copie automatique après cette issue.
 
 ### 5.4 IPC
 
@@ -232,7 +236,7 @@ Le callback, les ports et l'IPC n'ont aucun accès réseau au MVP. Le téléchar
 volontaire de modèle est un flux de distribution C0-C1 séparé. Aucun failover
 Cloud n'est possible et aucune file d'egress n'existe.
 
-## 11. Supply chain F-01, F-02 et F-05
+## 11. Supply chain F-01, F-02, F-03 et F-05
 
 ### F-01 — glib transitif Linux
 
@@ -256,6 +260,23 @@ justification, propriétaire, date d'expiration et signal de sortie. Un avis
 nouveau ou une chaîne modifiée rouvre la revue. Une allowlist n'est ni un
 silence global, ni une preuve de sécurité.
 
+### F-03 — gate avant mutation de manifests ou lockfiles
+
+Avant toute modification d'un manifest, lockfile, action CI ou source de
+dépendance, le lot doit produire une revue différentielle de:
+
+- advisories RustSec/OSV et crates/paquets yanked;
+- licences SPDX et obligations nouvelles;
+- sources registre, Git, path, tarball et intégrités;
+- dépendances directes/transitives ajoutées, retirées ou changées;
+- exceptions exactes avec advisory/source, justification, propriétaire et date
+  d'expiration.
+
+Une exception sans propriétaire ou expiration est interdite. Cette revue est
+une condition préalable au commit de la mutation, même avant l'automatisation.
+Les contrôles advisories/yanked/licences/sources deviennent bloquants en CI au
+plus tard avant le Gate 12, conformément à la revue PHASE-01.
+
 ### F-05 — commandes Tauri
 
 Le registre reste health_check. Avant une extension: capability minimale par
@@ -272,12 +293,12 @@ d'une autorisation par opération.
 | arrêt/FFI tardif | use-after-free, capture prolongée | epoch, quiescence, quarantaine des buffers | callback après quiescence annoncée ou impossibilité de borner l'arrêt |
 | ASR ne s'annule pas | CPU/RSS et résultat tardif | rejet par epoch, un job en vol | backend monopolise le process au-delà des budgets et ne peut être isolé |
 | état single-writer devient goulot | latence de contrôle | effets hors boucle, événements bornés/coalescés | budgets ratés par l'orchestrateur malgré profil conforme |
-| cible change pendant remise | fuite ou commande accidentelle | target token court, revalidation, at-most-once, OutcomeUnknown | mauvaise cible ou faux succès stable |
+| cible change pendant remise | fuite ou commande accidentelle | target token court, revalidation, at-most-once, DELIVERY_OUTCOME_UNKNOWN/OutcomeUnknown | mauvaise cible ou faux succès stable |
 | Wayland non automatisable | parcours dégradé | L1/L0 premier rang, capability par compositor | aucun contrôle capture utilisable sur cible prioritaire |
 | IPC permissif/XSS | appel de capacité native | F-05, CSP, origin/window/schema/state checks | seconde surface non bornable ou origine distante nécessaire |
 | C3 reste en mémoire | récupération locale | copies bornées, purge toutes sorties, crash dump exclu | besoin de spool/reprise persistante |
 | SettingsStore mélange historique/secrets | fuite/migration | scope C1-C2 strict, ports distincts futurs | exigence de C3/C4 ou sync dans le store |
-| F-01/F-02 bloquent Linux | sécurité/distribution | disposition/allowlist bornée, capability désactivable | aucune migration/inatteignabilité/acceptation avant beta |
+| F-01/F-02/F-03 bloquent dépendances/distribution | sécurité et traçabilité | disposition, allowlist bornée et revue avant mutation; CI bloquante avant Gate 12 | mutation non revue, exception expirée ou aucune disposition avant beta |
 
 Un déclencheur n'autorise pas un correctif silencieux. Le project-manager arrête
 les lots dépendants et ouvre un ADR si la frontière de processus, la machine
@@ -298,7 +319,9 @@ Toutes les conditions suivantes sont requises:
   métriques et PASS/FAIL;
 - aucune implémentation distante, permission, deuxième commande/WebView,
   dépendance ou donnée persistée introduite par l'ADR;
-- F-01/F-02/F-05 présents dans les gates des plans concernés;
+- F-01/F-02/F-03/F-05 présents dans les gates des plans concernés;
+- avant tout code C4, choix explicite entre le harnais coffre test-only jetable
+  de [CORE-CONTRACTS.md](CORE-CONTRACTS.md) et un ADR/contrat produit versionné;
 - liens et cohérence documentaire validés dans l'union du cycle;
 - security-reviewer confirme absence d'egress implicite et permissions minimales.
 
@@ -332,7 +355,8 @@ ports. Il ne promeut ni Tauri, ni whisper.cpp, ni SQLite, ni une voie OS.
 
 - environnement exact, permission et capability sondés séparément;
 - hotkey/toggle, lock/sleep/revocation, target-switch et champs protégés;
-- résultat ConfirmedExact distinct de ClipboardPrepared/Unconfirmed;
+- résultat ConfirmedExact distinct de ClipboardPrepared et de
+  DELIVERY_OUTCOME_UNKNOWN/OutcomeUnknown;
 - L1/L0 exercé sur chaque OS, obligatoire sous Wayland sans voie autorisée;
 - aucune permission plus large que le parcours prouvé;
 - fallback Windows activé seulement si indisponibilité macOS archivée.
@@ -343,7 +367,11 @@ ports. Il ne promeut ni Tauri, ni whisper.cpp, ni SQLite, ni une voie OS.
 - aucun changement du registre health_check dans ce cycle;
 - avant extension ultérieure, Gate F-05 de
   [IPC-VERSIONING.md](IPC-VERSIONING.md) complet;
-- disposition F-01 et allowlist F-02 versionnées pour Linux.
+- disposition F-01 et allowlist F-02 versionnées pour Linux;
+- revue F-03 avant toute mutation de manifest/lockfile, exceptions avec
+  propriétaire/expiration, puis automatisation bloquante avant Gate 12;
+- aucun harnais C4 promu ou réutilisé; tout besoin produit déclenche son
+  ADR/contrat versionné.
 
 Un spike est promu seulement après revue QA/sécurité proportionnée, seuils
 acceptés, capability flag/rollback et mise à jour de l'ADR. Un résultat indicatif
@@ -401,7 +429,7 @@ explicitement hors du cycle et exigent leur propre gate.
 - fail-closed peut perdre la session plutôt que fournir un texte partiel;
 - une seule session et un job ASR limitent le débit MVP;
 - exact-once de l'OS reste impossible à garantir après crash, d'où
-  OutcomeUnknown;
+  DELIVERY_OUTCOME_UNKNOWN et Recoverability OutcomeUnknown;
 - isolation monoprocessus ne protège pas d'une compromission totale du shell.
 
 ## 17. Décisions ouvertes
@@ -420,6 +448,7 @@ inventés par une implémentation:
 | O-07 | limites/timeouts de chaque schéma IPC v1 et binding Tauri | fuzz/golden tests/performance + F-05 | architect + frontend + security |
 | O-08 | disposition F-01 et allowlist F-02 | audit verrouillé et preuve Linux | security + platform |
 | O-09 | coûts et nécessité d'un widget/WebView distinct | démarrage/RSS/focus/a11y | frontend + QA + architect |
+| O-10 | frontière coffre C4 produit éventuelle | ADR/contrat versionné; ownership, effets, compensation, état inconnu et cleanup | security + architect + rust-core |
 
 Jusqu'à décision, la valeur est Unknown/Unsupported ou un paramètre explicite de
 harness; jamais une constante produit silencieuse.

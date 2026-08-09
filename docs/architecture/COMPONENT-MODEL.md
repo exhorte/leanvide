@@ -69,7 +69,8 @@ coffre natif distinct, également hors des cinq ports de ce cycle.
 2. Le shell compose les adaptateurs et le domaine. Aucun adaptateur ne peut
    appeler un autre adaptateur en contournant l'orchestrateur.
 3. Une session active est unique au MVP. Une nouvelle demande pendant un état
-   autre que Idle est refusée par une erreur Busy; elle n'est jamais mise dans
+   autre que Idle est refusée par CONTRACT_BUSY/RetryOperation sans transition
+   Error; elle n'est jamais mise dans
    une file non bornée.
 4. La WebView n'est jamais autoritaire pour Listening. Une perte ou un crash UI
    ne prolonge pas une capture; le watchdog natif applique la politique de
@@ -105,7 +106,7 @@ du spike, jamais une constante déduite silencieusement par l'implémentation.
 |---|---|---|---|
 | Q-AUDIO | SPSC T-RT vers T-AUDIO | indice d'un slot audio préalloué; le push transfère le slot au consommateur | try-push seulement; poser OverflowLatch, compter le bloc rejeté et abandonner la session. Ne jamais écraser un bloc non lu |
 | Q-CONTROL | MPSC vers T-ORCH | intentions bornées sans contenu libre | rejeter explicitement les intentions ordinaires; Stop/Cancel/Lock/PermissionRevoked posent aussi un latch atomique idempotent et un wake coalescé |
-| Q-ASR | SPSC logique, capacité un segment MVP | AudioSegmentLease transféré | Busy; aucune seconde session ni spool disque |
+| Q-ASR | SPSC logique, capacité un segment MVP | AudioSegmentLease transféré | CONTRACT_BUSY; aucune seconde session ni spool disque |
 | Q-OS | requêtes bornées T-ORCH vers T-OS | capability, TargetRef ou DeliveryLease | timeout et erreur; aucune répétition automatique d'une action d'injection |
 | Q-STORE | MPSC sérialisé | commandes réglages C1-C2 | backpressure au demandeur; jamais appelée sur le chemin RT |
 | Q-EVENT | core vers bridge IPC | snapshots, progrès et résultat terminal sans audio | progrès coalescés; un résultat terminal reste dans le core jusqu'à acquittement/reconnexion, il n'est pas perdu avec l'événement |
