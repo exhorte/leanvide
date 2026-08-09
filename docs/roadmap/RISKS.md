@@ -38,3 +38,13 @@ Chaque risque recoit ensuite: date de revue, indicateurs, plan de contingence et
 | R-016 | ouvert | cibles, protocoles et trois machines candidates documentes; aucune baseline | choix D-03/D-05/D-06 puis prototypes |
 | R-017 | mitige | sources directes datees et nature fournisseur explicite dans la draft PR #2 | revalidation lors de toute decision issue d'un concurrent |
 | R-018 | mitige avant merge | fusion locale temporaire des cinq branches sans conflit; 18/18 livrables et liens locaux valides | ne fusionner qu'apres arbitrage et revue coordonnee |
+
+## Revue CYCLE-20260809-02 — 2026-08-09
+
+| Risque | Statut | Indicateur ou preuve | Contingence / prochaine revue |
+|---|---|---|---|
+| R-013 | **clos** | D-01 a D-14 acceptees explicitement et enregistrees dans `docs/project-management/PHASE-00-PRODUCT-DECISIONS.md` | rouvrir uniquement sur demande explicite de changement produit |
+| R-014 | **clos pour le Gate 00** | depot public confirme; texte Apache-2.0 officiel ajoute dans `LICENSE` | auditer les licences des dependances, modeles, jeux de donnees et actifs a leur introduction |
+| R-015 | **clos pour le perimetre courant** | D-14 confirme le projet greenfield et l'absence de migration WPF sans inventaire externe | rouvrir avant fondation irreversible si un artefact WPF externe est fourni |
+| R-016 | ouvert, non bloquant pour Gate 00 | D-03/D-05/D-06 fixent macOS Apple Silicon, le francais et les profils materiels candidats; aucune baseline executable | valider ou reviser les seuils et le minimum materiel par prototypes reproductibles en Phase 02 |
+| R-018 | mitige avant merge | branches et draft PR restent separees; nouvelle validation d'union requise apres propagation | integrer seulement apres validation croisee finale et accord de merge distinct |
