@@ -48,3 +48,13 @@ Chaque risque recoit ensuite: date de revue, indicateurs, plan de contingence et
 | R-015 | **clos pour le perimetre courant** | D-14 confirme le projet greenfield et l'absence de migration WPF sans inventaire externe | rouvrir avant fondation irreversible si un artefact WPF externe est fourni |
 | R-016 | ouvert, non bloquant pour Gate 00 | D-03/D-05/D-06 fixent macOS Apple Silicon, le francais et les profils materiels candidats; aucune baseline executable | valider ou reviser les seuils et le minimum materiel par prototypes reproductibles en Phase 02 |
 | R-018 | mitige avant merge | branches et draft PR restent separees; nouvelle validation d'union requise apres propagation | integrer seulement apres validation croisee finale et accord de merge distinct |
+
+## Revue CYCLE-20260809-03 — 2026-08-09
+
+| Risque | Statut | Indicateur ou preuve | Contingence / prochaine revue |
+|---|---|---|---|
+| R-008 | **clos pour PHASE-01** | 47 fichiers de lots uniques, zero overlap; unions et merges Git sans conflit | reconduire ownership et controle d'union a chaque cycle |
+| R-010 | mitige pour la fondation | un asset Tauri manquant a d'abord casse macOS/Linux; correction `70697cd`, puis CI SUCCESS sur trois OS deux fois | maintenir la matrice a chaque PR et ajouter les tests natifs des que les adaptateurs existent |
+| R-011 | ouvert, non bloquant Gate 01 | dependances directes et lockfiles audites; aucun avis critique/haut; F-01 `glib 0.18.5` moyen et F-03 automatisation d'audit restent ouverts | reevaluer F-01 en PHASE-02; rendre advisories/licences/sources bloquants avant Gate 12 |
+| R-016 | ouvert, prochain gate | le shell et l'IPC ont une baseline de build mais aucun budget audio/ASR n'est encore mesure | prototypes reproductibles et baselines materiel en PHASE-02 |
+| R-018 | **clos** | tous les lots PHASE-00/01 requis sont integres dans `develop`; CI `31329298017` verte x3 | liens et preuves restent verifies dans chaque cycle suivant |

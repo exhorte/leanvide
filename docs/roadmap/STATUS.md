@@ -5,15 +5,15 @@ Responsable: `project-manager`
 
 ## Phase active
 
-Aucune phase `ACTIVE`. `PHASE-00` est `DONE`; `PHASE-01` est `READY` mais n'est pas demarree.
+Aucune phase active. `PHASE-02` est `READY`; son cycle explicite reste a ouvrir.
 
 ## Tableau global
 
 | Phase | Etat | Progression | Gate | Preuves | Blocage |
 |---:|---|---:|---|---|---|
 | 00 | DONE | 100% | **PASS** | `docs/project-management/cycles/CYCLE-20260809-02.md`, acceptation utilisateur du 2026-08-09 | aucun |
-| 01 | READY | 0% | entree autorisee; Gate 01 non evalue | Gate 00 PASS | attend un objectif et un cycle explicites |
-| 02 | NOT_STARTED | 0% | verrouille | aucune | depend de 00-01 |
+| 01 | DONE | 100% | **PASS** | `docs/project-management/cycles/CYCLE-20260809-03.md`, CI `31328840492` et `31329298017` | aucun |
+| 02 | READY | 0% | en attente | aucune | cycle explicite a ouvrir |
 | 03 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
 | 04 | NOT_STARTED | 0% | verrouille | aucune | depend de 01-02 |
 | 05 | NOT_STARTED | 0% | verrouille | aucune | depend de 04 |
@@ -38,6 +38,8 @@ Aucune phase `ACTIVE`. `PHASE-00` est `DONE`; `PHASE-01` est `READY` mais n'est 
 | 2026-08-09 | Cloture `BLOCKED` de CYCLE-20260809-01 apres livraison des travaux independants | project-manager | draft PR [#1](https://github.com/exhorte/leanvide/pull/1), [#2](https://github.com/exhorte/leanvide/pull/2), [#3](https://github.com/exhorte/leanvide/pull/3), [#4](https://github.com/exhorte/leanvide/pull/4), [#5](https://github.com/exhorte/leanvide/pull/5) |
 | 2026-08-09 | Acceptation explicite de D-01 a D-14 et ouverture du cycle de reevaluation du Gate 00 | utilisateur + project-manager | `docs/project-management/cycles/CYCLE-20260809-02.md` |
 | 2026-08-09 | Cloture `COMPLETE` de PHASE-00 apres propagation, revue croisee et validation d'union | project-manager | `docs/project-management/cycles/CYCLE-20260809-02.md` |
+| 2026-08-09 | Fusion des cinq PR PHASE-00 dans `develop` et ouverture de PHASE-01 | project-manager | PR #1 a #5 fusionnees; `docs/project-management/cycles/CYCLE-20260809-03.md` |
+| 2026-08-09 | Cloture `COMPLETE` de PHASE-01 apres correction multiplateforme et deux matrices CI vertes | project-manager | PR #7 a #11; runs `31328840492` et `31329298017`; `docs/project-management/cycles/CYCLE-20260809-03.md` |
 
 ## Evaluation du Gate 00
 
@@ -51,6 +53,16 @@ La progression de 100% correspond aux six criteres du gate satisfaits sur six; e
 | Flux local/Cloud cartographies | PASS | `docs/security/DATA-FLOWS.md` dans la draft PR #3 |
 | Risques critiques avec proprietaire | PASS | `docs/security/THREAT-MODEL-V0.md` et `docs/roadmap/RISKS.md` |
 | Decision utilisateur sur les choix bloquants | PASS | acceptation explicite « J’accepte D-01 à D-14 telles que recommandées. » recue le 2026-08-09 |
+
+## Evaluation du Gate 01
+
+| Critere | Verdict | Preuve ou blocage |
+|---|---|---|
+| Clone propre vers build reussi avec instructions seules | PASS | checkout CI, toolchains verrouillees, `pnpm install --frozen-lockfile`, lint, tests, checks et build sur les trois OS |
+| CI verte sur les trois familles d'OS | PASS | PR run `31328840492` puis push `develop` run `31329298017`, tous deux SUCCESS x3 |
+| Aucun secret ou chemin utilisateur dans le depot | PASS | scans de l'union et revue supply chain: zero `.env`, credential ou chemin personnel suivi |
+| Frontend et Rust echangent une commande IPC typee de smoke test | PASS | `health_check` sans requete, reponse `{status:"ok",version:string}`; tests TypeScript et Rust 2/2 |
+| Worktrees agents sans conflit | PASS | union de 47 fichiers uniques sans overlap d'ownership; integrations Git sans conflit |
 
 ## Mode de mise a jour
 
